@@ -1,0 +1,3820 @@
+0<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎯 숫자 맞추기 게임 ULTRA</title>
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700;800&display=swap');
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --red:      #ff6b6b;
+  --blue:     #4fc3f7;
+  --gold:     #ffd700;
+  --green:    #64dd17;
+  --purple:   #e040fb;
+  --orange:   #ff9800;
+  --cyan:     #00e5ff;
+  --pink:     #ff4081;
+  --lime:     #76ff03;
+  --navy:     #0c0c1e;
+  --card-bg:  rgba(255,255,255,0.052);
+  --border:   rgba(255,255,255,0.14);
+  --gblue:    rgba(79,195,247,0.45);
+  --ggold:    rgba(255,215,0,0.45);
+  --gred:     rgba(255,107,107,0.45);
+  --ggreen:   rgba(100,221,23,0.55);
+  --radius:   28px;
+  --dur-fast: 0.2s;
+  --dur-pop:  0.42s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+body {
+  min-height: 100vh;
+  width: 100vw;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--navy);
+  font-family: 'Nanum Gothic', sans-serif;
+  overflow: hidden;
+  cursor: none;
+}
+
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 18% 18%, rgba(12,45,90,0.75) 0%, transparent 52%),
+    radial-gradient(ellipse at 82% 82%, rgba(35,10,75,0.75) 0%, transparent 52%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+#cursor {
+  position: fixed;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: rgba(79,195,247,0.9);
+  box-shadow: 0 0 14px var(--blue), 0 0 32px rgba(79,195,247,0.3);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%,-50%);
+  transition: width 0.2s, height 0.2s, background 0.2s;
+  mix-blend-mode: screen;
+}
+#cursorRing {
+  position: fixed;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(79,195,247,0.48);
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%,-50%);
+  mix-blend-mode: screen;
+}
+
+#bgCanvas {
+  position: fixed; inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.aurora { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.aurora-band {
+  position: absolute;
+  width: 230%; height: 340px;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.072;
+  animation: auroraDrift linear infinite;
+}
+.aurora-band:nth-child(1) { top:4%;  left:-65%; background:linear-gradient(90deg,transparent,#4fc3f7,#e040fb,transparent); animation-duration:19s; }
+.aurora-band:nth-child(2) { top:37%; left:-65%; background:linear-gradient(90deg,transparent,#64dd17,#00e5ff,transparent); animation-duration:26s; animation-delay:-10s; }
+.aurora-band:nth-child(3) { top:67%; left:-65%; background:linear-gradient(90deg,transparent,#ffd700,#ff6b6b,transparent); animation-duration:22s; animation-delay:-16s; }
+.aurora-band:nth-child(4) { top:22%; left:-65%; background:linear-gradient(90deg,transparent,#ff4081,#76ff03,transparent); animation-duration:32s; animation-delay:-6s; opacity:0.042; }
+
+@keyframes auroraDrift {
+  0%   { transform:translateX(0)   scaleY(1); }
+  33%  { transform:translateX(22%) scaleY(1.55); }
+  66%  { transform:translateX(52%) scaleY(0.68); }
+  100% { transform:translateX(105%) scaleY(1); }
+}
+
+.card {
+  position: relative; z-index: 10;
+  margin: auto;
+  background: var(--card-bg);
+  backdrop-filter: blur(30px) saturate(1.6);
+  -webkit-backdrop-filter: blur(30px) saturate(1.6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px 20px;
+  width: min(460px, 92vw);
+  max-height: 96vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  text-align: center;
+  box-shadow: 0 35px 90px rgba(0,0,0,0.62), 0 0 0 1px rgba(255,255,255,0.035), inset 0 1px 0 rgba(255,255,255,0.17);
+  animation: cardIn 0.78s cubic-bezier(0.34,1.56,0.64,1) both;
+  transition: box-shadow 0.4s;
+}
+.card::-webkit-scrollbar { display: none; }
+
+.card::before {
+  content: ''; position:absolute; inset:-1px;
+  border-radius:calc(var(--radius) + 1px);
+  background:linear-gradient(135deg,rgba(79,195,247,.35),rgba(224,64,251,.28),rgba(100,221,23,.28),rgba(255,215,0,.28),rgba(79,195,247,.35));
+  background-size:400% 400%;
+  animation:borderShift 8s linear infinite;
+  z-index:-1; opacity:0; transition:opacity 0.4s;
+}
+.card:hover::before { opacity:1; }
+
+@keyframes borderShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+@keyframes cardIn { from{opacity:0;transform:translateY(65px) scale(0.86) rotateX(10deg);} to{opacity:1;transform:none;} }
+
+@keyframes shake {
+  0%,100%{transform:translateX(0) rotate(0);}
+  12%{transform:translateX(-13px) rotate(-2deg);}
+  25%{transform:translateX(13px)  rotate(2deg);}
+  37%{transform:translateX(-10px) rotate(-1.5deg);}
+  50%{transform:translateX(10px)  rotate(1.5deg);}
+  62%{transform:translateX(-6px);}
+  75%{transform:translateX(6px);}
+  87%{transform:translateX(-3px);}
+}
+
+@keyframes correctJump {
+  0%,100%{transform:translateY(0) scale(1);}
+  20%{transform:translateY(-24px) scale(1.04);}
+  45%{transform:translateY(0) scale(0.97);}
+  70%{transform:translateY(-12px) scale(1.014);}
+  90%{transform:translateY(0) scale(0.997);}
+}
+
+@keyframes correctGlow {
+  0%  {box-shadow:0 35px 90px rgba(0,0,0,.62),0 0 0 0 var(--ggreen);}
+  40% {box-shadow:0 35px 90px rgba(0,0,0,.62),0 0 70px 35px var(--ggreen);}
+  100%{box-shadow:0 35px 90px rgba(0,0,0,.62),0 0 0 0 rgba(100,221,23,0);}
+}
+
+@keyframes dangerGlow {
+  0%,100%{box-shadow:0 35px 90px rgba(0,0,0,.62);}
+  50%    {box-shadow:0 35px 90px rgba(0,0,0,.62),0 0 50px 20px rgba(255,50,50,0.32);}
+}
+
+@keyframes blueGlow {
+  0%,100%{box-shadow:0 35px 90px rgba(0,0,0,.62);}
+  50%    {box-shadow:0 35px 90px rgba(0,0,0,.62),0 0 40px 16px rgba(79,195,247,0.4);}
+}
+
+.card.shake         { animation:shake 0.52s ease; }
+.card.correct-jump  { animation:correctJump 0.68s cubic-bezier(0.34,1.56,0.64,1); }
+.card.correct-glow  { animation:correctGlow 1.1s ease forwards; }
+.card.danger-glow   { animation:dangerGlow 0.65s ease; }
+.card.blue-glow     { animation:blueGlow 0.55s ease; }
+
+.title-wrap { position:relative; margin-bottom:4px; }
+
+.title {
+  font-family: 'Jua', sans-serif;
+  font-size: clamp(24px,6vw,34px);
+  color: #fff; line-height:1.1;
+  text-shadow: 0 0 24px rgba(79,195,247,.55), 0 0 75px rgba(79,195,247,.2);
+  animation: titlePulse 4.8s ease-in-out infinite;
+}
+@keyframes titlePulse {
+  0%,100%{text-shadow:0 0 24px rgba(79,195,247,.55),0 0 75px rgba(79,195,247,.2);}
+  50%    {text-shadow:0 0 34px rgba(224,64,251,.65),0 0 95px rgba(224,64,251,.28);}
+}
+
+.star-deco { position:absolute; font-size:12px; animation:starFloat 3s ease-in-out infinite; pointer-events:none; }
+.star-deco:nth-child(1){top:-8px;left:8px;animation-delay:0s;}
+.star-deco:nth-child(2){top:-8px;right:8px;animation-delay:1.1s;}
+.star-deco:nth-child(3){bottom:-6px;left:20%;animation-delay:1.7s;}
+.star-deco:nth-child(4){bottom:-6px;right:20%;animation-delay:0.6s;}
+
+@keyframes starFloat {
+  0%,100%{transform:translateY(0) rotate(0);opacity:.7;}
+  50%    {transform:translateY(-7px) rotate(18deg);opacity:1;}
+}
+
+.subtitle { font-size:12px; color:rgba(255,255,255,.47); margin-bottom:10px; letter-spacing:.4px; }
+
+.range-badge {
+  display:inline-block;
+  background:linear-gradient(135deg,#e94560,#ff6b6b);
+  color:#fff; font-family:'Jua',sans-serif; font-size:13px;
+  padding:5px 18px; border-radius:999px; margin-bottom:12px;
+  box-shadow:0 4px 22px rgba(233,69,96,.48);
+  animation:badgeBounce 2.9s ease-in-out infinite;
+}
+@keyframes badgeBounce { 0%,100%{transform:scale(1) translateY(0);} 50%{transform:scale(1.05) translateY(-3px);} }
+
+.difficulty-row { display:flex; gap:6px; margin-bottom:10px; justify-content:center; flex-wrap:wrap; }
+.diff-btn {
+  font-family:'Jua',sans-serif; font-size:12px;
+  padding:5px 12px; border:1.5px solid rgba(255,255,255,.14);
+  border-radius:999px; background:rgba(255,255,255,.055);
+  color:rgba(255,255,255,.62); cursor:pointer; transition:all 0.2s;
+  user-select:none;
+}
+.diff-btn:hover { background:rgba(255,255,255,.11); color:#fff; transform:translateY(-1px); }
+.diff-btn.active { background:linear-gradient(135deg,#4fc3f7,#0288d1); color:#fff; border-color:transparent; box-shadow:0 4px 14px rgba(79,195,247,.42); transform:scale(1.09); }
+.diff-btn.active.hard { background:linear-gradient(135deg,#ff6b6b,#e94560); box-shadow:0 4px 14px rgba(255,107,107,.46); }
+.diff-btn.active.hell { background:linear-gradient(135deg,#e040fb,#7b1fa2); box-shadow:0 4px 14px rgba(224,64,251,.46); }
+
+.timer-wrap { margin-bottom:8px; display:none; }
+.timer-label { font-size:11px; color:rgba(255,255,255,.5); margin-bottom:4px; font-family:'Jua',sans-serif; }
+.timer-track { height:7px; background:rgba(255,255,255,.08); border-radius:99px; overflow:hidden; position:relative; }
+.timer-fill  { height:100%; border-radius:99px; background:linear-gradient(90deg,#64dd17,#ffd700); transition:width 1s linear, background 1s; width:100%; }
+.timer-fill.urgent { background:linear-gradient(90deg,#ff6b6b,#ff0000); animation:timerPulse 0.48s ease-in-out infinite; }
+@keyframes timerPulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+.timer-num { font-family:'Jua',sans-serif; font-size:12px; color:rgba(255,255,255,.68); text-align:right; margin-top:2px; }
+
+.stats-row { display:flex; gap:6px; margin-bottom:10px; }
+.stat-box {
+  flex:1; background:rgba(255,255,255,.068);
+  border:1px solid rgba(255,255,255,.095);
+  border-radius:12px; padding:7px 8px;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+}
+.stat-label { font-size:10px; color:rgba(255,255,255,.5); letter-spacing:.3px; }
+
+.tries-num {
+  font-family:'Jua',sans-serif; font-size:22px;
+  color:var(--gold); text-shadow:0 0 16px var(--ggold);
+  display:inline-block; min-width:28px; line-height:1;
+}
+.tries-num.bump { animation:bump 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes bump {
+  0%{transform:scale(1) rotate(0);}
+  40%{transform:scale(1.8) rotate(-11deg);}
+  70%{transform:scale(0.87) rotate(5deg);}
+  100%{transform:scale(1) rotate(0);}
+}
+
+.combo-num {
+  font-family:'Jua',sans-serif; font-size:18px;
+  color:var(--pink); text-shadow:0 0 14px rgba(255,64,129,.5);
+  display:inline-block; min-width:24px; line-height:1;
+}
+.combo-num.combo-bump { animation:comboBump 0.42s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes comboBump {
+  0%{transform:scale(1) rotate(0);}
+  42%{transform:scale(2.0) rotate(-14deg);}
+  72%{transform:scale(0.83) rotate(7deg);}
+  100%{transform:scale(1) rotate(0);}
+}
+
+.heat-bar-track { width:100%; height:6px; background:rgba(255,255,255,.1); border-radius:99px; overflow:hidden; }
+.heat-bar-fill  { height:100%; border-radius:99px; width:0%; transition:width 0.55s ease, background 0.55s ease; }
+.temp-emoji { font-size:16px; display:inline-block; transition:all 0.3s; }
+
+.distance-bar-wrap {
+  margin-bottom:8px;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.085);
+  border-radius:12px;
+  padding:7px 12px;
+}
+.distance-label { font-size:10px; color:rgba(255,255,255,.48); margin-bottom:5px; font-family:'Jua',sans-serif; }
+.distance-dots {
+  display:flex; justify-content:space-between; align-items:center; gap:2px;
+}
+.dist-dot {
+  flex:1; height:8px; border-radius:99px;
+  background:rgba(255,255,255,.1);
+  transition:background 0.4s, transform 0.3s;
+}
+.dist-dot.lit { transform:scaleY(1.3); }
+
+.achievement-toast {
+  position:fixed; top:22px; right:22px;
+  background:rgba(18,18,38,0.94);
+  backdrop-filter:blur(18px);
+  border:1px solid rgba(255,215,0,.38);
+  border-radius:16px; padding:13px 18px;
+  font-family:'Jua',sans-serif; color:#fff; font-size:15px;
+  z-index:8000; box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 22px rgba(255,215,0,.18);
+  display:none; max-width:250px; text-align:left;
+  animation:toastIn 0.48s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.achievement-toast.show { display:block; }
+@keyframes toastIn  { from{transform:translateX(80px) scale(0.78);opacity:0;} to{transform:none;opacity:1;} }
+@keyframes toastOut { from{transform:none;opacity:1;} to{transform:translateX(85px) scale(0.75);opacity:0;} }
+.toast-title { color:var(--gold); font-size:12px; margin-bottom:3px; }
+.toast-icon  { font-size:22px; margin-right:5px; }
+
+.visualizer-wrap {
+  display:flex; align-items:flex-end; justify-content:center; gap:3px;
+  height:30px; margin-bottom:12px; opacity:0; transition:opacity 0.4s;
+}
+.visualizer-wrap.active { opacity:1; }
+.viz-bar {
+  width:5px; border-radius:3px 3px 0 0; min-height:3px;
+  background:var(--blue);
+  animation:vizIdle 1.9s ease-in-out infinite;
+}
+.viz-bar:nth-child(1){animation-delay:0.00s;}
+.viz-bar:nth-child(2){animation-delay:0.10s;}
+.viz-bar:nth-child(3){animation-delay:0.20s;}
+.viz-bar:nth-child(4){animation-delay:0.30s;}
+.viz-bar:nth-child(5){animation-delay:0.40s;}
+.viz-bar:nth-child(6){animation-delay:0.50s;}
+.viz-bar:nth-child(7){animation-delay:0.40s;}
+.viz-bar:nth-child(8){animation-delay:0.30s;}
+.viz-bar:nth-child(9){animation-delay:0.20s;}
+.viz-bar:nth-child(10){animation-delay:0.10s;}
+.viz-bar:nth-child(11){animation-delay:0.00s;}
+.viz-bar:nth-child(12){animation-delay:0.10s;}
+
+@keyframes vizIdle {
+  0%,100%{height:4px;background:var(--blue);}
+  50%    {height:18px;background:var(--purple);}
+}
+
+.range-tracker {
+  background:rgba(255,255,255,.042); border:1px solid rgba(255,255,255,.085);
+  border-radius:12px; padding:8px 12px; margin-bottom:10px;
+}
+.range-label { font-size:10px; color:rgba(255,255,255,.46); margin-bottom:5px; font-family:'Jua',sans-serif; }
+.range-slider-track { position:relative; height:8px; background:rgba(255,255,255,.1); border-radius:99px; overflow:hidden; }
+.range-slider-fill  { position:absolute; top:0; bottom:0; background:linear-gradient(90deg,#4fc3f7,#e040fb); border-radius:99px; transition:left .52s cubic-bezier(0.34,1.56,0.64,1),right .52s cubic-bezier(0.34,1.56,0.64,1); }
+.range-numbers { display:flex; justify-content:space-between; font-family:'Jua',sans-serif; font-size:12px; margin-top:4px; color:rgba(255,255,255,.7); }
+.range-low  { color:var(--blue); transition:color .3s; }
+.range-high { color:var(--red);  transition:color .3s; }
+
+.input-row { display:flex; gap:8px; margin-bottom:10px; }
+
+input[type=number] {
+  flex:1; background:rgba(255,255,255,.09); border:2px solid rgba(255,255,255,.17);
+  border-radius:12px; padding:10px 14px;
+  font-family:'Jua',sans-serif; font-size:20px; color:#fff;
+  text-align:center; outline:none;
+  transition:border-color .25s, box-shadow .25s, background .25s;
+  -moz-appearance:textfield; caret-color:var(--blue);
+}
+input[type=number]::-webkit-inner-spin-button { display:none; }
+input[type=number]:focus { border-color:var(--blue); background:rgba(79,195,247,.09); box-shadow:0 0 0 4px rgba(79,195,247,.2),0 0 26px rgba(79,195,247,.12); }
+input[type=number].input-correct { border-color:var(--green); background:rgba(100,221,23,.09); box-shadow:0 0 0 4px rgba(100,221,23,.22); }
+input[type=number].input-wrong { animation:inputShake .33s ease; }
+@keyframes inputShake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-8px);} 75%{transform:translateX(8px);} }
+input:disabled { opacity:.42; cursor:not-allowed; }
+
+.btn {
+  padding:10px 18px; border:none; border-radius:12px;
+  font-family:'Jua',sans-serif; font-size:15px; cursor:pointer;
+  transition:transform .15s, box-shadow .15s, filter .15s;
+  position:relative; overflow:hidden; user-select:none;
+}
+.btn:active { transform:scale(0.91)!important; filter:brightness(0.86); }
+
+.btn-check {
+  background:linear-gradient(135deg,#4fc3f7,#0288d1);
+  color:#fff; box-shadow:0 6px 24px rgba(79,195,247,.4);
+  white-space:nowrap; letter-spacing:.5px;
+}
+.btn-check:hover:not(:disabled) { box-shadow:0 10px 36px rgba(79,195,247,.6); transform:translateY(-3px); }
+.btn-check:disabled { opacity:.4; cursor:not-allowed; }
+
+.btn-check::after, .btn-retry::after {
+  content:''; position:absolute; top:-50%; left:-68%;
+  width:36%; height:200%; background:rgba(255,255,255,.2);
+  transform:skewX(-22deg); animation:btnShine 3.5s ease-in-out infinite;
+}
+.btn-retry::after { animation-delay:1.4s; }
+@keyframes btnShine { 0%,100%{left:-68%;opacity:0;} 8%{opacity:1;} 44%{left:130%;opacity:0;} }
+
+.btn-retry {
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  color:var(--navy); box-shadow:0 6px 24px rgba(255,215,0,.36);
+  width:100%; display:none; margin-top:6px; font-weight:800; font-size:15px;
+}
+.btn-retry.show { display:block; animation:retryAppear .62s .1s cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes retryAppear { from{opacity:0;transform:scale(0.62) translateY(26px);} to{opacity:1;transform:none;} }
+.btn-retry:hover { box-shadow:0 10px 36px rgba(255,215,0,.58); transform:translateY(-3px); }
+
+.hint {
+  min-height:50px; display:flex; align-items:center; justify-content:center;
+  font-family:'Jua',sans-serif; font-size:clamp(15px,4vw,19px);
+  border-radius:12px; padding:10px 14px; margin-bottom:8px; opacity:0; position:relative;
+}
+.hint.show { opacity:1; animation:hintPop .5s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes hintPop {
+  0%  {transform:scale(.7) translateY(20px) rotate(-3deg);opacity:0;}
+  58% {transform:scale(1.06) translateY(-5px) rotate(.5deg);}
+  100%{transform:none;opacity:1;}
+}
+.hint.bigger  { background:rgba(255,107,107,.14); color:var(--red);    border:1.5px solid rgba(255,107,107,.32); text-shadow:0 0 22px rgba(255,107,107,.4); }
+.hint.smaller { background:rgba(79,195,247,.12);  color:var(--blue);   border:1.5px solid rgba(79,195,247,.32);  text-shadow:0 0 22px rgba(79,195,247,.4); }
+.hint.correct { background:rgba(100,221,100,.14); color:var(--green);  border:1.5px solid rgba(100,221,100,.42); text-shadow:0 0 22px rgba(100,221,23,.5); font-size:clamp(13px,3.5vw,17px); animation:hintPop .5s cubic-bezier(0.34,1.56,0.64,1), correctFlash .95s .2s ease; }
+.hint.error-hint { background:rgba(255,152,0,.12); color:var(--orange); border:1.5px solid rgba(255,152,0,.3); }
+.hint.timeout    { background:rgba(224,64,251,.13); color:var(--purple); border:1.5px solid rgba(224,64,251,.35); }
+
+@keyframes correctFlash { 0%,100%{background:rgba(100,221,100,.14);} 50%{background:rgba(100,221,100,.4);} }
+
+.type-cursor { display:inline-block; width:2px; height:1em; background:currentColor; margin-left:2px; vertical-align:middle; animation:cursorBlink .7s step-end infinite; }
+@keyframes cursorBlink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+
+.history-wrap { margin-bottom:8px; max-height:70px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.18) transparent; }
+.history-wrap::-webkit-scrollbar       { width:4px; }
+.history-wrap::-webkit-scrollbar-track { background:transparent; }
+.history-wrap::-webkit-scrollbar-thumb { background:rgba(255,255,255,.18); border-radius:2px; }
+.history-list { display:flex; flex-wrap:wrap; gap:4px; justify-content:center; }
+.history-chip { font-family:'Jua',sans-serif; font-size:11px; padding:2px 9px; border-radius:999px; animation:chipIn .4s cubic-bezier(0.34,1.56,0.64,1) both; }
+@keyframes chipIn { from{transform:scale(0) rotate(-20deg);opacity:0;} to{transform:none;opacity:1;} }
+.chip-bigger  { background:rgba(255,107,107,.2); color:var(--red);   border:1px solid rgba(255,107,107,.3); }
+.chip-smaller { background:rgba(79,195,247,.15); color:var(--blue);  border:1px solid rgba(79,195,247,.3); }
+.chip-correct { background:rgba(100,221,23,.2);  color:var(--green); border:1px solid rgba(100,221,23,.4); }
+
+.win-banner {
+  position:absolute; top:-24px; left:50%; transform:translateX(-50%);
+  font-family:'Jua',sans-serif; font-size:14px;
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  color:var(--navy); padding:6px 22px; border-radius:999px;
+  white-space:nowrap; box-shadow:0 4px 20px rgba(255,215,0,.58);
+  display:none; animation:bannerDrop .56s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+.win-banner.show { display:block; }
+@keyframes bannerDrop { from{transform:translateX(-50%) translateY(-26px) scale(0.62);opacity:0;} to{transform:translateX(-50%) scale(1);opacity:1;} }
+
+.score-popup { text-align:center; padding:10px 0 4px; display:none; }
+.score-popup.show { display:block; animation:fadeScaleIn .52s ease; }
+@keyframes fadeScaleIn { from{opacity:0;transform:scale(.8);} to{opacity:1;transform:none;} }
+.score-stars { font-size:24px; letter-spacing:3px; animation:starSparkle .85s ease; }
+@keyframes starSparkle { 0%{transform:scale(.45);opacity:0;} 60%{transform:scale(1.2);} 100%{transform:none;opacity:1;} }
+.score-label { font-family:'Jua',sans-serif; font-size:13px; color:rgba(255,255,255,.55); margin-top:3px; }
+
+.confetti-wrap { position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:999; }
+.particle { position:absolute; animation:confettiFall linear forwards; }
+@keyframes confettiFall { 0%{transform:translateY(-28px) translateX(0) rotate(0);opacity:1;} 18%{opacity:1;} 88%{opacity:.8;} 100%{transform:translateY(113vh) translateX(var(--drift,0px)) rotate(var(--spin,540deg));opacity:0;} }
+
+.burst-particle { position:fixed; border-radius:50%; pointer-events:none; z-index:998; animation:burstOut var(--dur,.8s) ease-out forwards; }
+@keyframes burstOut { 0%{transform:translate(0,0) scale(1);opacity:1;} 100%{transform:translate(var(--tx,0px),var(--ty,0px)) scale(.18);opacity:0;} }
+
+.star-particle { position:fixed; pointer-events:none; z-index:997; font-size:20px; animation:starBurst var(--dur,1s) ease-out forwards; }
+@keyframes starBurst { 0%{transform:translate(0,0) scale(0) rotate(0);opacity:1;} 28%{transform:translate(var(--tx,0px),var(--ty,0px)) scale(1.35) rotate(180deg);opacity:1;} 100%{transform:translate(calc(var(--tx,0px)*1.65),calc(var(--ty,0px)*1.65)) scale(0) rotate(420deg);opacity:0;} }
+
+.screen-flash { position:fixed;inset:0;pointer-events:none;z-index:990;animation:flashOut .52s ease forwards; }
+@keyframes flashOut { 0%{opacity:.45;} 100%{opacity:0;} }
+
+.trail-dot { position:fixed; border-radius:50%; pointer-events:none; z-index:9990; transform:translate(-50%,-50%); animation:trailFade var(--dur,.55s) ease forwards; }
+@keyframes trailFade { to{transform:translate(-50%,-50%) scale(0);opacity:0;} }
+
+@keyframes floatUp { 0%{transform:translateY(0) scale(1);opacity:1;} 100%{transform:translateY(-70px) scale(.8);opacity:0;} }
+
+@keyframes rainbowText { 0%{color:var(--red);} 17%{color:var(--orange);} 33%{color:var(--gold);} 50%{color:var(--green);} 67%{color:var(--blue);} 83%{color:var(--purple);} 100%{color:var(--red);} }
+.rainbow { animation:rainbowText 1.35s linear infinite; }
+
+.ripple { position:absolute; border-radius:50%; transform:scale(0); animation:rippleOut .6s ease forwards; pointer-events:none; }
+@keyframes rippleOut { to{transform:scale(5.5);opacity:0;} }
+
+@media (max-width:430px) {
+  .card { padding:16px 14px 16px; border-radius:20px; }
+  .stats-row { flex-direction:column; }
+  .difficulty-row { flex-wrap:wrap; }
+  .hint { font-size:13px; padding:8px 10px; }
+}
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursorRing"></div>
+
+<div class="aurora">
+  <div class="aurora-band"></div>
+  <div class="aurora-band"></div>
+  <div class="aurora-band"></div>
+  <div class="aurora-band"></div>
+</div>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="confetti-wrap" id="confettiWrap"></div>
+
+<div class="achievement-toast" id="achieveToast">
+  <div class="toast-title">🏅 업적 달성!</div>
+  <div id="achieveMsg"></div>
+</div>
+
+<div class="card" id="card">
+
+  
+  <div class="win-banner" id="winBanner">🏆 정답 맞히기 성공! 🏆</div>
+
+  
+  <div class="title-wrap">
+    <span class="star-deco">⭐</span>
+    <span class="star-deco">✨</span>
+    <span class="star-deco">🌟</span>
+    <span class="star-deco">💫</span>
+    <div class="title" id="mainTitle">🎯 숫자 맞추기!</div>
+  </div>
+  <div class="subtitle">내가 생각한 숫자를 과연 맞출 수 있을까? 🤔</div>
+  <div class="range-badge">1 ~ 100 사이의 숫자</div>
+
+  
+  <div class="difficulty-row" id="diffRow">
+    <button class="diff-btn active"  data-mode="easy"   onclick="setMode('easy',this)"  >🌱 쉬움</button>
+    <button class="diff-btn"        data-mode="normal" onclick="setMode('normal',this)" >⚡ 보통</button>
+    <button class="diff-btn hard"   data-mode="hard"   onclick="setMode('hard',this)"  >🔥 어려움</button>
+    <button class="diff-btn hell"   data-mode="hell"   onclick="setMode('hell',this)"  >💀 지옥</button>
+  </div>
+
+  
+  <div class="timer-wrap" id="timerWrap">
+    <div class="timer-label">⏱️ 남은 시간</div>
+    <div class="timer-track"><div class="timer-fill" id="timerFill"></div></div>
+    <div class="timer-num" id="timerNum">30</div>
+  </div>
+
+  
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-label">🔢 시도</div>
+      <span class="tries-num" id="tries">0</span>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label"><span class="temp-emoji" id="tempEmoji">🧊</span> 온도</div>
+      <div class="heat-bar-track"><div class="heat-bar-fill" id="heatBar"></div></div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-label">🔥 콤보</div>
+      <span class="combo-num" id="combo">0</span>
+    </div>
+  </div>
+
+  
+  <div class="distance-bar-wrap" id="distWrap">
+    <div class="distance-label">📍 정답까지의 거리</div>
+    <div class="distance-dots" id="distDots">
+    </div>
+  </div>
+
+  
+  <div class="visualizer-wrap" id="vizWrap">
+    <div class="viz-bar"></div><div class="viz-bar"></div><div class="viz-bar"></div>
+    <div class="viz-bar"></div><div class="viz-bar"></div><div class="viz-bar"></div>
+    <div class="viz-bar"></div><div class="viz-bar"></div><div class="viz-bar"></div>
+    <div class="viz-bar"></div><div class="viz-bar"></div><div class="viz-bar"></div>
+  </div>
+
+  
+  <div class="range-tracker">
+    <div class="range-label">🔍 좁혀진 범위</div>
+    <div class="range-slider-track">
+      <div class="range-slider-fill" id="rangeSliderFill" style="left:0%;right:0%;"></div>
+    </div>
+    <div class="range-numbers">
+      <span class="range-low"  id="rangeLow">1</span>
+      <span style="font-size:11px;color:rgba(255,255,255,.32);">━━━━━━━━━━━━</span>
+      <span class="range-high" id="rangeHigh">100</span>
+    </div>
+  </div>
+
+  
+  <div class="input-row">
+    <input type="number" id="guess" min="1" max="100" placeholder="숫자 입력..." autocomplete="off" />
+    <button class="btn btn-check" id="checkBtn">확인 ✅</button>
+  </div>
+
+  
+  <div class="hint" id="hint"></div>
+
+  
+  <div class="history-wrap" id="historyWrap" style="display:none;">
+    <div class="history-list" id="historyList"></div>
+  </div>
+
+  
+  <div class="score-popup" id="scorePopup">
+    <div class="score-stars" id="scoreStars"></div>
+    <div class="score-label"  id="scoreLabel"></div>
+  </div>
+
+  
+  <button class="btn btn-retry" id="retryBtn">🔄 다시 하기!</button>
+
+</div>
+
+<script>
+"use strict";
+
+const cursorEl  = document.getElementById('cursor');
+const ringEl    = document.getElementById('cursorRing');
+let mx = 0, my = 0, rx = 0, ry = 0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursorEl.style.left = mx + 'px';
+  cursorEl.style.top  = my + 'px';
+});
+
+// 링 부드럽게 따라오기
+(function ringLoop() {
+  rx += (mx - rx) * 0.13;
+  ry += (my - ry) * 0.13;
+  ringEl.style.left = rx + 'px';
+  ringEl.style.top  = ry + 'px';
+  requestAnimationFrame(ringLoop);
+})();
+
+// 클릭 시 커서 스케일
+document.addEventListener('mousedown', () => {
+  cursorEl.style.transform = 'translate(-50%,-50%) scale(0.55)';
+  ringEl.style.transform   = 'translate(-50%,-50%) scale(1.5)';
+});
+document.addEventListener('mouseup', () => {
+  cursorEl.style.transform = 'translate(-50%,-50%) scale(1)';
+  ringEl.style.transform   = 'translate(-50%,-50%) scale(1)';
+});
+
+// 버튼 호버 커서 변화
+document.querySelectorAll('.btn,.diff-btn').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursorEl.style.width  = '30px';
+    cursorEl.style.height = '30px';
+    cursorEl.style.background = 'rgba(255,215,0,0.9)';
+    ringEl.style.borderColor   = 'rgba(255,215,0,0.55)';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursorEl.style.width  = '16px';
+    cursorEl.style.height = '16px';
+    cursorEl.style.background = 'rgba(79,195,247,0.9)';
+    ringEl.style.borderColor   = 'rgba(79,195,247,0.48)';
+  });
+});
+
+const TRAIL_COLS = ['#4fc3f7','#e040fb','#ffd700','#64dd17','#ff6b6b','#ff9800','#00e5ff','#ff4081'];
+let trailHue = 0, lastTrail = 0;
+
+document.addEventListener('mousemove', e => {
+  const now = Date.now();
+  if (now - lastTrail < 35) return;
+  lastTrail = now;
+  const dot  = document.createElement('div');
+  dot.className = 'trail-dot';
+  const sz   = 5 + Math.random() * 7;
+  const col  = TRAIL_COLS[trailHue % TRAIL_COLS.length];
+  dot.style.cssText = `
+    left:${e.clientX}px;top:${e.clientY}px;
+    width:${sz}px;height:${sz}px;
+    background:${col};
+    --dur:${0.42+Math.random()*0.32}s;
+    box-shadow:0 0 9px ${col};
+  `;
+  document.body.appendChild(dot);
+  trailHue++;
+  setTimeout(() => dot.remove(), 850);
+});
+
+(function initBg() {
+  const cv  = document.getElementById('bgCanvas');
+  const ctx = cv.getContext('2d');
+  let W, H, stars = [], nebulas = [], shooters = [], frame = 0;
+
+  function resize() {
+    W = cv.width  = window.innerWidth;
+    H = cv.height = window.innerHeight;
+    initStars(); initNebulas();
+  }
+
+  function initStars() {
+    stars = [];
+    const n = Math.floor((W * H) / 3600);
+    for (let i = 0; i < n; i++) {
+      stars.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: Math.random() * 1.9 + 0.12,
+        op: Math.random() * 0.85 + 0.1,
+        spd: Math.random() * 0.5 + 0.05,
+        ph: Math.random() * Math.PI * 2,
+        col: Math.random() > 0.87
+          ? `hsl(${200 + Math.random()*80},85%,82%)`
+          : '#ffffff'
+      });
+    }
+  }
+
+  function initNebulas() {
+    nebulas = [];
+    for (let i = 0; i < 6; i++) {
+      nebulas.push({
+        x: Math.random() * W, y: Math.random() * H,
+        rx: 90 + Math.random() * 180,
+        ry: 55 + Math.random() * 110,
+        hue: Math.random() * 360,
+        op: 0.038 + Math.random() * 0.055,
+        ph: Math.random() * Math.PI * 2,
+      });
+    }
+  }
+
+  function spawnShooter() {
+    const a = (18 + Math.random() * 28) * Math.PI / 180;
+    const spd = 4.5 + Math.random() * 6.5;
+    shooters.push({
+      x: Math.random() * W * 0.75,
+      y: Math.random() * H * 0.42,
+      vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+      len: 88 + Math.random() * 120, life: 1.0,
+    });
+  }
+
+  function draw(ts) {
+    ctx.clearRect(0, 0, W, H);
+
+    // 우주 배경
+    const bg = ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,Math.max(W,H)*.78);
+    bg.addColorStop(0,'rgba(12,25,60,0.68)');
+    bg.addColorStop(1,'rgba(6,6,20,0.85)');
+    ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+
+    // 성운
+    const t = ts * 0.00055;
+    for (const n of nebulas) {
+      const pulse = n.op * (0.68 + 0.32 * Math.sin(t + n.ph));
+      const grd = ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.rx);
+      grd.addColorStop(0,`hsla(${n.hue},82%,72%,${pulse})`);
+      grd.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.save();
+      ctx.scale(1, n.ry/n.rx);
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(n.x, n.y*(n.rx/n.ry), n.rx, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // 별
+    const ts2 = ts * 0.001;
+    for (const s of stars) {
+      const blink = s.op * (0.62 + 0.38 * Math.sin(ts2 * s.spd + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = s.col;
+      ctx.globalAlpha = blink;
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // 별똥별
+    for (let i = shooters.length - 1; i >= 0; i--) {
+      const ss = shooters[i];
+      const g  = ctx.createLinearGradient(ss.x,ss.y,ss.x-ss.vx*(ss.len/5),ss.y-ss.vy*(ss.len/5));
+      g.addColorStop(0,`rgba(255,255,255,${ss.life})`);
+      g.addColorStop(0.42,`rgba(180,225,255,${ss.life*0.48})`);
+      g.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.beginPath();
+      ctx.strokeStyle = g; ctx.lineWidth = 2;
+      ctx.moveTo(ss.x, ss.y);
+      ctx.lineTo(ss.x - ss.vx*(ss.len/5.8), ss.y - ss.vy*(ss.len/5.8));
+      ctx.stroke();
+      ss.x += ss.vx; ss.y += ss.vy; ss.life -= 0.022;
+      if (ss.life <= 0 || ss.x > W || ss.y > H) shooters.splice(i,1);
+    }
+
+    frame++;
+    if (frame % 200 === 0) spawnShooter();
+    if (Math.random() < 0.003) spawnShooter();
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  requestAnimationFrame(draw);
+  window.addEventListener('resize', resize);
+})();
+
+const ACtx = window.AudioContext || window.webkitAudioContext;
+let ac;
+
+function getAC() {
+  if (!ac) ac = new ACtx();
+  if (ac.state === 'suspended') ac.resume();
+  return ac;
+}
+
+function beep(freq, type, dur, vol = 0.26, delay = 0, pan = 0) {
+  const a    = getAC();
+  const osc  = a.createOscillator();
+  const gain = a.createGain();
+  const lp   = a.createBiquadFilter();
+  const pnr  = a.createStereoPanner ? a.createStereoPanner() : null;
+  lp.type = 'lowpass'; lp.frequency.value = 5000;
+  osc.connect(lp); lp.connect(gain);
+  if (pnr) { pnr.pan.value = pan; gain.connect(pnr); pnr.connect(a.destination); }
+  else      { gain.connect(a.destination); }
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, a.currentTime + delay);
+  gain.gain.setValueAtTime(0, a.currentTime + delay);
+  gain.gain.linearRampToValueAtTime(vol,  a.currentTime + delay + 0.014);
+  gain.gain.exponentialRampToValueAtTime(0.001, a.currentTime + delay + dur);
+  osc.start(a.currentTime + delay);
+  osc.stop(a.currentTime + delay + dur + 0.07);
+}
+
+function sweep(f0, f1, type, dur, vol = 0.23, delay = 0) {
+  const a    = getAC();
+  const osc  = a.createOscillator();
+  const gain = a.createGain();
+  osc.connect(gain); gain.connect(a.destination);
+  osc.type = type;
+  osc.frequency.setValueAtTime(f0, a.currentTime + delay);
+  osc.frequency.linearRampToValueAtTime(f1, a.currentTime + delay + dur);
+  gain.gain.setValueAtTime(vol, a.currentTime + delay);
+  gain.gain.exponentialRampToValueAtTime(0.001, a.currentTime + delay + dur);
+  osc.start(a.currentTime + delay);
+  osc.stop(a.currentTime + delay + dur + 0.07);
+}
+
+function noise(dur, vol = 0.17, delay = 0, hiPass = 4000) {
+  const a   = getAC();
+  const len = a.sampleRate * dur;
+  const buf = a.createBuffer(1, len, a.sampleRate);
+  const d   = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  const src = a.createBufferSource();
+  const hp  = a.createBiquadFilter();
+  const g   = a.createGain();
+  hp.type = 'highpass'; hp.frequency.value = hiPass;
+  src.buffer = buf;
+  src.connect(hp); hp.connect(g); g.connect(a.destination);
+  g.gain.setValueAtTime(vol, a.currentTime + delay);
+  g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + delay + dur);
+  src.start(a.currentTime + delay);
+  src.stop(a.currentTime + delay + dur + 0.06);
+}
+
+// 📈 더 큰 수 — 경쾌하게 올라가는 3단 스위프
+function soundBigger() {
+  sweep(280,  430, 'sine',     0.10, 0.22, 0);
+  sweep(430,  590, 'sine',     0.12, 0.20, 0.09);
+  beep(590,  'triangle', 0.09, 0.15, 0.20, -0.3);
+  noise(0.04, 0.07, 0.21, 6000);
+}
+
+// 📉 더 작은 수 — 무겁게 내려가는 3단
+function soundSmaller() {
+  sweep(570, 420, 'sine',    0.10, 0.22, 0);
+  sweep(420, 270, 'sine',    0.12, 0.20, 0.09);
+  beep(270, 'triangle', 0.09, 0.15, 0.20, 0.3);
+  noise(0.04, 0.07, 0.21, 6000);
+}
+
+// ⚠️ 오류 — 거친 삐~삐~삐
+function soundError() {
+  beep(155, 'sawtooth', 0.07, 0.17, 0.00);
+  beep(145, 'square',   0.07, 0.13, 0.09);
+  beep(135, 'sawtooth', 0.09, 0.15, 0.17);
+  noise(0.07, 0.12, 0.00, 3000);
+}
+
+// ⏰ 타임아웃 — 강하게 하강
+function soundTimeout() {
+  sweep(700, 150, 'sawtooth', 0.35, 0.28, 0);
+  noise(0.22, 0.17, 0.1, 2500);
+  sweep(400, 100, 'sine',    0.20, 0.18, 0.35);
+}
+
+// 🎉 정답 팡파레 — 시도 횟수에 따라 달라짐
+function soundWin(tries) {
+  let melody, tempo;
+  if (tries <= 3) {
+    melody = [523,659,784,880,1047,1319,1568];  // 도레미파솔라시 → 대성공
+    tempo  = 0.10;
+  } else if (tries <= 7) {
+    melody = [523,659,784,1047,1175,1319];       // 도레미파솔라
+    tempo  = 0.11;
+  } else {
+    melody = [440,523,659,784,880];              // 쉬운 멜로디
+    tempo  = 0.13;
+  }
+  melody.forEach((f, i) => beep(f, 'sine', 0.18, 0.26, i * tempo));
+
+  const endT = melody.length * tempo;
+  beep(2093, 'sine', 0.22, 0.15, endT);
+  beep(2637, 'sine', 0.20, 0.11, endT + 0.1);
+  sweep(110, 35, 'sine', 0.28, 0.38, 0);
+  sweep(110, 35, 'sine', 0.22, 0.30, 0.38);
+  noise(0.06, 0.13, 0);
+  noise(0.06, 0.11, 0.38);
+}
+
+// 🌡️ 온도 사운드 — 가까울수록 높고 풍성
+function soundWarm(ratio) {
+  // ratio 0(멀다) ~ 1(정답): 제곱해서 가까울수록 주파수가 급격히 상승
+  const f   = 200 + ratio * ratio * 1800;
+  const vol = 0.07 + ratio * 0.13;
+  const dur = 0.08 + ratio * 0.06;
+
+  beep(f, 'sine', dur, vol, 0);
+
+  if (ratio > 0.50) beep(f * 1.5, 'triangle', dur * 0.8, vol * 0.5, 0.05);
+  if (ratio > 0.70) beep(f * 2.0, 'sine',     dur * 0.7, vol * 0.4, 0.09);
+  if (ratio > 0.85) beep(f * 3.0, 'sine',     dur * 0.6, vol * 0.3, 0.13);
+  if (ratio > 0.95) {
+    beep(f * 4.0, 'sine', 0.05, vol * 0.2, 0.16);
+    noise(0.05, 0.08, 0.0, 9000);
+  }
+}
+
+// ⏰ 타이머 째깍 소리
+function soundTick() {
+  beep(1100, 'square', 0.025, 0.07, 0);
+}
+
+// 🔄 리셋 사운드
+function soundReset() {
+  sweep(750, 350, 'sine',    0.20, 0.22, 0);
+  beep(350, 'triangle', 0.14, 0.14, 0.18);
+  noise(0.04, 0.06, 0.0, 5000);
+}
+
+// 💧 클릭음
+function soundClick() {
+  beep(1050, 'sine', 0.032, 0.09, 0);
+}
+
+// 🏅 업적 달성음
+function soundAchieve() {
+  [659, 784, 1047, 1319].forEach((f, i) => beep(f, 'sine', 0.12, 0.2, i * 0.08));
+}
+
+const VIZ_COLS = ['#4fc3f7','#e040fb','#64dd17','#ffd700','#ff6b6b','#ff9800','#00e5ff','#ff4081'];
+
+function animateViz(durationMs = 650) {
+  const bars = document.querySelectorAll('.viz-bar');
+  const wrap = document.getElementById('vizWrap');
+  wrap.classList.add('active');
+  let iv = setInterval(() => {
+    bars.forEach((b,i) => {
+      b.style.height     = (4 + Math.random() * 24) + 'px';
+      b.style.background = VIZ_COLS[Math.floor(Math.random() * VIZ_COLS.length)];
+    });
+  }, 75);
+  setTimeout(() => {
+    clearInterval(iv);
+    bars.forEach(b => { b.style.height = ''; b.style.background = ''; });
+    wrap.classList.remove('active');
+  }, durationMs);
+}
+
+const CONF_COLS = ['#ff6b6b','#ffd700','#4fc3f7','#64dd17','#ff9800','#e040fb','#00e5ff','#fff','#ff4081','#76ff03','#ffeb3b','#40c4ff'];
+
+// 비 같은 폭죽
+function launchConfetti(count = 140) {
+  const wrap = document.getElementById('confettiWrap');
+  for (let i = 0; i < count; i++) {
+    const p  = document.createElement('div');
+    p.className = 'particle';
+    const sz = 5 + Math.random() * 12;
+    const isC= Math.random() > 0.42;
+    p.style.cssText = `
+      left:${Math.random()*100}%;top:-22px;
+      width:${sz}px;height:${sz*(isC?1:.4+Math.random()*.8)}px;
+      background:${CONF_COLS[i%CONF_COLS.length]};
+      border-radius:${isC?'50%':'2px'};
+      --drift:${(Math.random()-.5)*135}px;
+      --spin:${(Math.random()>.5?1:-1)*(360+Math.random()*850)}deg;
+      animation-duration:${1.9+Math.random()*2.6}s;
+      animation-delay:${Math.random()*1.0}s;
+      box-shadow:${Math.random()>.7?'0 0 8px 2px rgba(255,255,255,.5)':'none'};
+    `;
+    wrap.appendChild(p);
+  }
+  setTimeout(() => { while(wrap.firstChild) wrap.removeChild(wrap.firstChild); }, 6500);
+}
+
+// 원형 폭발
+function burstParticles(x, y, color = '#ffd700', count = 16) {
+  for (let i = 0; i < count; i++) {
+    const p  = document.createElement('div');
+    p.className = 'burst-particle';
+    const ang = (i / count) * Math.PI * 2;
+    const d   = 38 + Math.random() * 68;
+    const sz  = 4 + Math.random() * 8;
+    p.style.cssText = `
+      left:${x}px;top:${y}px;
+      width:${sz}px;height:${sz}px;
+      background:${color};
+      --tx:${Math.cos(ang)*d}px;--ty:${Math.sin(ang)*d}px;
+      --dur:${.48+Math.random()*.58}s;
+      box-shadow:0 0 8px ${color};
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1300);
+  }
+}
+
+// 별 이모지 폭발
+function starBurst(x, y, count = 12) {
+  const emojis = ['⭐','✨','💫','🌟','⚡','🎆','💥','🎇'];
+  for (let i = 0; i < count; i++) {
+    const p   = document.createElement('div');
+    p.className = 'star-particle';
+    const ang = (i / count) * Math.PI * 2;
+    const d   = 55 + Math.random() * 95;
+    p.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    p.style.cssText = `
+      left:${x}px;top:${y}px;
+      --tx:${Math.cos(ang)*d}px;--ty:${Math.sin(ang)*d}px;
+      --dur:${.78+Math.random()*.75}s;
+    `;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1800);
+  }
+}
+
+// 화면 플래시
+function screenFlash(color = 'rgba(100,221,23,0.3)') {
+  const el = document.createElement('div');
+  el.className = 'screen-flash'; el.style.background = color;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 550);
+}
+
+// 떠오르는 텍스트
+function floatText(x, y, text, color = '#ffd700') {
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position:fixed;left:${x}px;top:${y}px;
+    transform:translate(-50%,-50%);
+    font-family:'Jua',sans-serif;font-size:28px;color:${color};
+    pointer-events:none;z-index:1000;
+    text-shadow:0 0 14px ${color};
+    animation:floatUp 1.0s ease forwards;white-space:nowrap;
+  `;
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1050);
+}
+
+function addRipple(btn, e) {
+  const r = document.createElement('span');
+  r.className = 'ripple';
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  r.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px;background:rgba(255,255,255,0.26);`;
+  btn.appendChild(r);
+  setTimeout(() => r.remove(), 650);
+}
+
+const ACHIEVEMENTS = [
+  { id:'start',    cond:(t,c,h)=> t===1,           icon:'🎯', msg:'첫 번째 추측! 시작이 반이에요!' },
+  { id:'lucky1',   cond:(t,c,h)=> t<=2 && h,       icon:'🍀', msg:'2번 안에 정답! 초천재예요!!' },
+  { id:'lucky3',   cond:(t,c,h)=> t<=4 && h,       icon:'💎', msg:'4번 안에 정답! 믿기 어려워요!' },
+  { id:'pro',      cond:(t,c,h)=> t<=8 && h,       icon:'🌟', msg:'8번 안에 정답! 프로 수준이에요!' },
+  { id:'stubborn', cond:(t,c,h)=> t>=18 && h,      icon:'💪', msg:'18번 만에 정답! 포기를 몰라요!' },
+  { id:'marathon', cond:(t,c,h)=> t>=30 && h,      icon:'🏃', msg:'30번 만에 정답! 끝내 해냈어요!' },
+  { id:'combo3',   cond:(t,c,h)=> c>=3,            icon:'🔥', msg:'3연콤보! 뜨겁게 달아오르고 있어요!' },
+  { id:'combo6',   cond:(t,c,h)=> c>=6,            icon:'🌋', msg:'6연콤보!! 완전 폭발이에요!!' },
+  { id:'tryFirst', cond:(t,c,h)=> t===1 && h,      icon:'🎪', msg:'첫 번째 만에 정답?! 불가능해요!!' },
+];
+const earned = new Set();
+
+function checkAchievements(tries, combo, isCorrect) {
+  for (const ach of ACHIEVEMENTS) {
+    if (!earned.has(ach.id) && ach.cond(tries, combo, isCorrect)) {
+      earned.add(ach.id);
+      showAchievement(ach.icon, ach.msg);
+    }
+  }
+}
+
+let toastTimer;
+function showAchievement(icon, msg) {
+  soundAchieve();
+  const t = document.getElementById('achieveToast');
+  document.getElementById('achieveMsg').innerHTML = `<span class="toast-icon">${icon}</span>${msg}`;
+  t.className = 'achievement-toast show';
+  t.style.animation = '';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.animation = 'toastOut .4s ease forwards';
+    setTimeout(() => { t.className='achievement-toast'; t.style.animation=''; }, 450);
+  }, 3400);
+}
+
+function calcHeat(val, ans) {
+  const d = Math.abs(val - ans);
+  if (d === 0)  return 1.00;
+  if (d <= 1)   return 0.96;
+  if (d <= 3)   return 0.88;
+  if (d <= 6)   return 0.75;
+  if (d <= 10)  return 0.60;
+  if (d <= 16)  return 0.44;
+  if (d <= 24)  return 0.30;
+  if (d <= 35)  return 0.17;
+  return 0.06;
+}
+
+function updateHeatBar(heat) {
+  const bar  = document.getElementById('heatBar');
+  const emoj = document.getElementById('tempEmoji');
+  bar.style.width = `${heat * 100}%`;
+  if      (heat >= 0.92) { bar.style.background='linear-gradient(90deg,#ff6b6b,#ff0000)'; emoj.textContent='🔥'; }
+  else if (heat >= 0.72) { bar.style.background='linear-gradient(90deg,#ff9800,#ff6b6b)'; emoj.textContent='🌶️'; }
+  else if (heat >= 0.50) { bar.style.background='linear-gradient(90deg,#ffd700,#ff9800)'; emoj.textContent='☀️'; }
+  else if (heat >= 0.28) { bar.style.background='linear-gradient(90deg,#4fc3f7,#ffd700)'; emoj.textContent='🌤️'; }
+  else                   { bar.style.background='linear-gradient(90deg,#00e5ff,#4fc3f7)'; emoj.textContent='🧊'; }
+}
+
+// 거리 점 20개 업데이트
+function initDistDots() {
+  const container = document.getElementById('distDots');
+  container.innerHTML = '';
+  for (let i = 0; i < 20; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dist-dot';
+    container.appendChild(dot);
+  }
+}
+
+function updateDistDots(heat) {
+  const dots = document.querySelectorAll('.dist-dot');
+  const lit  = Math.round(heat * 20);
+  const colors = ['#00e5ff','#4fc3f7','#ffd700','#ff9800','#ff6b6b','#ff0000'];
+  dots.forEach((d, i) => {
+    if (i < lit) {
+      const ci = Math.floor((i / 20) * (colors.length - 1));
+      d.style.background = colors[ci];
+      d.classList.add('lit');
+    } else {
+      d.style.background = 'rgba(255,255,255,.1)';
+      d.classList.remove('lit');
+    }
+  });
+}
+
+let rangeLow = 1, rangeHigh = 100;
+
+function updateRange(val, dir) {
+  if (dir === 'bigger'  && val >= rangeLow)  rangeLow  = val + 1;
+  if (dir === 'smaller' && val <= rangeHigh) rangeHigh = val - 1;
+  document.getElementById('rangeLow').textContent  = rangeLow;
+  document.getElementById('rangeHigh').textContent = rangeHigh;
+  const lp = ((rangeLow - 1) / 99) * 100;
+  const rp = ((100 - rangeHigh) / 99) * 100;
+  document.getElementById('rangeSliderFill').style.left  = `${lp}%`;
+  document.getElementById('rangeSliderFill').style.right = `${rp}%`;
+}
+
+function addChip(val, type) {
+  const list = document.getElementById('historyList');
+  const wrap = document.getElementById('historyWrap');
+  wrap.style.display = 'block';
+  const c = document.createElement('div');
+  c.className = `history-chip chip-${type}`;
+  c.textContent = `${type==='bigger'?'↑':type==='smaller'?'↓':'✓'} ${val}`;
+  list.appendChild(c);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+let typingIv;
+function typeHint(el, text, spd = 17) {
+  clearInterval(typingIv);
+  el.innerHTML = '';
+  let i = 0;
+  const cur = document.createElement('span');
+  cur.className = 'type-cursor';
+  el.appendChild(cur);
+  typingIv = setInterval(() => {
+    cur.insertAdjacentText('beforebegin', text[i++]);
+    if (i >= text.length) { clearInterval(typingIv); setTimeout(()=>cur.remove(),950); }
+  }, spd);
+}
+
+let timerIv, timeLeft, timeMax;
+
+function startTimer(sec) {
+  clearInterval(timerIv);
+  timeLeft = timeMax = sec;
+  const fill = document.getElementById('timerFill');
+  const num  = document.getElementById('timerNum');
+  document.getElementById('timerWrap').style.display = 'block';
+  fill.classList.remove('urgent');
+  fill.style.width = '100%'; num.textContent = sec;
+
+  timerIv = setInterval(() => {
+    timeLeft--;
+    fill.style.width = `${(timeLeft/timeMax)*100}%`;
+    num.textContent  = timeLeft;
+    if (timeLeft <= 8)  fill.classList.add('urgent');
+    if (timeLeft <= 5 && timeLeft > 0) {
+      soundTick();
+      floatText(window.innerWidth/2, window.innerHeight*0.28, `⏰ ${timeLeft}!`, '#ff6b6b');
+    }
+    if (timeLeft <= 0) { clearInterval(timerIv); onTimeout(); }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerIv);
+  document.getElementById('timerFill').style.width = '0%';
+}
+
+function onTimeout() {
+  soundTimeout();
+  screenFlash('rgba(255,50,50,0.35)');
+  const hint = document.getElementById('hint');
+  hint.className = 'hint timeout show';
+  typeHint(hint, `⏰ 시간 초과! 정답은 ${answer}이었어요. 다시 도전! 💪`);
+  triggerCardAnim('danger-glow', 700);
+  document.getElementById('guess').disabled = true;
+  document.getElementById('checkBtn').disabled = true;
+  document.getElementById('retryBtn').className = 'btn btn-retry show';
+  burstParticles(window.innerWidth/2, window.innerHeight/2, '#ff6b6b', 20);
+}
+
+let currentMode = 'easy';
+const MODE_CFG = {
+  easy:   { timer:null, label:'쉬움' },
+  normal: { timer:60,  label:'보통' },
+  hard:   { timer:30,  label:'어려움' },
+  hell:   { timer:15,  label:'지옥' },
+};
+
+function setMode(mode, btn) {
+  currentMode = mode;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // 게임 중에는 리셋하지 않고, 타이머만 재설정
+  clearInterval(timerIv);
+  document.getElementById('timerWrap').style.display = 'none';
+  if (MODE_CFG[mode].timer && !document.getElementById('guess').disabled) {
+    startTimer(MODE_CFG[mode].timer);
+  }
+}
+
+function calcStars(tries) {
+  if (tries === 1) return { stars:'⭐⭐⭐⭐⭐', label:'🎪 단 1번에?! 믿기 어려워요!!' };
+  if (tries <= 3)  return { stars:'⭐⭐⭐⭐⭐', label:'🎊 퍼펙트!! 초천재예요!!' };
+  if (tries <= 5)  return { stars:'⭐⭐⭐⭐',   label:'🌟 아주 훌륭해요! 거의 다 왔어요!' };
+  if (tries <= 8)  return { stars:'⭐⭐⭐',     label:'😊 잘 했어요! 계속 연습해봐요!' };
+  if (tries <= 13) return { stars:'⭐⭐',       label:'👍 좋아요! 다음엔 더 빠를 거예요!' };
+  return                   { stars:'⭐',         label:'💪 포기하지 않은 게 최고예요!' };
+}
+
+function triggerCardAnim(cls, dur = 600) {
+  const c = document.getElementById('card');
+  c.classList.remove(cls);
+  void c.offsetWidth;
+  c.classList.add(cls);
+  if (dur) setTimeout(() => c.classList.remove(cls), dur);
+}
+
+let answer, tries, combo;
+
+function init() {
+  answer    = Math.floor(Math.random() * 100) + 1;
+  tries     = 0;
+  combo     = 0;
+  rangeLow  = 1;
+  rangeHigh = 100;
+
+  // DOM
+  const guess = document.getElementById('guess');
+  const hint  = document.getElementById('hint');
+  const trEl  = document.getElementById('tries');
+  const coEl  = document.getElementById('combo');
+  const rBtn  = document.getElementById('retryBtn');
+  const cBtn  = document.getElementById('checkBtn');
+  const card  = document.getElementById('card');
+  const hBar  = document.getElementById('heatBar');
+  const tEmoj = document.getElementById('tempEmoji');
+  const wBnr  = document.getElementById('winBanner');
+  const hWrap = document.getElementById('historyWrap');
+  const hList = document.getElementById('historyList');
+  const sPop  = document.getElementById('scorePopup');
+  const tWrap = document.getElementById('timerWrap');
+
+  guess.value = ''; guess.disabled = false; guess.className = '';
+  cBtn.disabled = false;
+  hint.className = 'hint'; hint.textContent = '';
+  rBtn.className = 'btn btn-retry';
+  trEl.textContent = '0';
+  coEl.textContent = '0';
+  hBar.style.width = '0%'; hBar.style.background = 'linear-gradient(90deg,#00e5ff,#4fc3f7)';
+  tEmoj.textContent = '🧊';
+  wBnr.className = 'win-banner';
+  hWrap.style.display = 'none'; hList.innerHTML = '';
+  sPop.className = 'score-popup';
+  card.classList.remove('correct-glow','correct-jump','shake','danger-glow','blue-glow');
+  document.getElementById('rangeLow').textContent  = '1';
+  document.getElementById('rangeHigh').textContent = '100';
+  document.getElementById('rangeSliderFill').style.left  = '0%';
+  document.getElementById('rangeSliderFill').style.right = '0%';
+  tWrap.style.display = 'none';
+  clearInterval(timerIv);
+
+  initDistDots();
+  updateDistDots(0);
+
+  if (MODE_CFG[currentMode].timer) startTimer(MODE_CFG[currentMode].timer);
+
+  guess.focus();
+}
+
+function check() {
+  const guess = document.getElementById('guess');
+  const hint  = document.getElementById('hint');
+  const trEl  = document.getElementById('tries');
+  const coEl  = document.getElementById('combo');
+  const rBtn  = document.getElementById('retryBtn');
+  const cBtn  = document.getElementById('checkBtn');
+  const card  = document.getElementById('card');
+
+  const val = parseInt(guess.value, 10);
+
+  // ── 유효성 검사 ──
+  if (isNaN(val) || val < 1 || val > 100) {
+    soundError();
+    triggerCardAnim('shake', 520);
+    guess.classList.remove('input-wrong');
+    void guess.offsetWidth;
+    guess.classList.add('input-wrong');
+    hint.className = 'hint error-hint show';
+    typeHint(hint, '⚠️ 1~100 사이의 숫자를 입력해줘요!');
+    combo = 0; coEl.textContent = '0';
+    return;
+  }
+
+  // ── 시도 횟수 ──
+  tries++;
+  trEl.textContent = tries;
+  trEl.classList.remove('bump'); void trEl.offsetWidth; trEl.classList.add('bump');
+
+  const bRect = cBtn.getBoundingClientRect();
+  const bx = bRect.left + bRect.width / 2;
+  const by = bRect.top  + bRect.height / 2;
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+
+  checkAchievements(tries, combo, false);
+
+  // ── 정답! ──
+  if (val === answer) {
+    stopTimer();
+    soundWin(tries);
+    animateViz(1300);
+    screenFlash('rgba(100,221,23,0.28)');
+
+    card.classList.add('correct-glow');
+    setTimeout(() => { card.classList.remove('correct-glow'); card.classList.add('correct-jump'); }, 230);
+
+    launchConfetti(200);
+    starBurst(bx, by, 18);
+    burstParticles(bx, by, '#64dd17', 24);
+    burstParticles(cx, cy, '#ffd700', 30);
+    burstParticles(cx * 0.35, cy * 0.55, '#e040fb', 16);
+    burstParticles(cx * 1.65, cy * 0.55, '#ff6b6b', 16);
+    burstParticles(cx * 0.35, cy * 1.4,  '#4fc3f7', 14);
+    burstParticles(cx * 1.65, cy * 1.4,  '#ff9800', 14);
+
+    document.getElementById('winBanner').className = 'win-banner show';
+    addChip(val, 'correct');
+    guess.className = 'input-correct';
+    updateHeatBar(1); updateDistDots(1);
+    checkAchievements(tries, combo, true);
+
+    hint.className = 'hint correct show';
+    typeHint(hint, `🎉 정답! ${tries}번 만에 맞췄어요! 최고예요! 🏆`, 20);
+
+    const title = document.getElementById('mainTitle');
+    title.classList.add('rainbow');
+    setTimeout(() => title.classList.remove('rainbow'), 4000);
+
+    // 축하 텍스트 여러 개
+    const msgs = tries === 1
+      ? ['🎪 1번에 정답!!', '🍀 기적이에요!!', '⭐ 천재!!']
+      : tries <= 3
+        ? ['🎊 PERFECT!', '⭐ 최고예요!', '✨ 훌륭해요!']
+        : ['🎉 정답이에요!', '💪 잘 했어요!', '🌟 대단해요!'];
+
+    setTimeout(() => floatText(cx,      cy - 75,  msgs[0], '#ffd700'), 250);
+    setTimeout(() => floatText(cx - 100,cy - 105, msgs[1] || '✨',     '#ff6b6b'), 460);
+    setTimeout(() => floatText(cx + 100,cy - 105, msgs[2] || '⭐',     '#4fc3f7'), 670);
+    setTimeout(() => floatText(cx,      cy - 145, '🎆',                '#64dd17'), 870);
+
+    // 별점 팝업
+    const { stars, label } = calcStars(tries);
+    setTimeout(() => {
+      document.getElementById('scoreStars').textContent = stars;
+      document.getElementById('scoreLabel').textContent = label;
+      document.getElementById('scorePopup').className   = 'score-popup show';
+    }, 550);
+
+    guess.disabled = true; cBtn.disabled = true;
+    rBtn.className = 'btn btn-retry show';
+
+  // ── 더 큰 수 ──
+  } else if (val < answer) {
+    const heat = calcHeat(val, answer);
+    combo = 0; coEl.textContent = '0';
+    soundBigger(); soundWarm(heat);
+    animateViz(420);
+    updateHeatBar(heat); updateDistDots(heat);
+    updateRange(val, 'bigger');
+    addChip(val, 'bigger');
+
+    hint.className = 'hint bigger show';
+    typeHint(hint, '📈 더 큰 수예요!', 17);
+
+    if (heat >= 0.90) {
+      floatText(bx, by - 45, '🔥 엄청 뜨거워요!!', '#ff6b6b');
+      burstParticles(bx, by, '#ff6b6b', 14);
+      triggerCardAnim('danger-glow', 650);
+    } else if (heat >= 0.68) {
+      floatText(bx, by - 38, '🌶️ 가까워요!', '#ff9800');
+      burstParticles(bx, by, '#ff9800', 9);
+      triggerCardAnim('blue-glow', 550);
+    } else {
+      burstParticles(bx, by, '#ff6b6b', 5);
+    }
+
+  // ── 더 작은 수 ──
+  } else {
+    const heat = calcHeat(val, answer);
+    combo = 0; coEl.textContent = '0';
+    soundSmaller(); soundWarm(heat);
+    animateViz(420);
+    updateHeatBar(heat); updateDistDots(heat);
+    updateRange(val, 'smaller');
+    addChip(val, 'smaller');
+
+    hint.className = 'hint smaller show';
+    typeHint(hint, '📉 더 작은 수예요!', 17);
+
+    if (heat >= 0.90) {
+      floatText(bx, by - 45, '🔥 엄청 뜨거워요!!', '#4fc3f7');
+      burstParticles(bx, by, '#4fc3f7', 14);
+      triggerCardAnim('danger-glow', 650);
+    } else if (heat >= 0.68) {
+      floatText(bx, by - 38, '🌶️ 가까워요!', '#00e5ff');
+      burstParticles(bx, by, '#00e5ff', 9);
+      triggerCardAnim('blue-glow', 550);
+    } else {
+      burstParticles(bx, by, '#4fc3f7', 5);
+    }
+  }
+
+  guess.value = '';
+  guess.focus();
+}
+
+// 확인 버튼
+document.getElementById('checkBtn').addEventListener('click', function(e) {
+  soundClick(); addRipple(this, e); check();
+});
+
+// 다시 하기
+document.getElementById('retryBtn').addEventListener('click', function(e) {
+  soundReset(); addRipple(this, e);
+  const rect = this.getBoundingClientRect();
+  burstParticles(rect.left + rect.width/2, rect.top + rect.height/2, '#ffd700', 16);
+  starBurst(rect.left + rect.width/2, rect.top + rect.height/2, 8);
+  const card = document.getElementById('card');
+  card.style.transition = 'transform .35s ease, opacity .35s ease';
+  card.style.transform  = 'scale(0.86) rotateY(20deg)';
+  card.style.opacity    = '0.4';
+  setTimeout(() => {
+    card.style.transform = ''; card.style.opacity = ''; card.style.transition = '';
+    init();
+  }, 360);
+});
+
+// Enter 키
+document.getElementById('guess').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { soundClick(); check(); }
+});
+
+// 입력 범위 초과 경고
+document.getElementById('guess').addEventListener('input', function() {
+  const v = parseInt(this.value, 10);
+  this.style.borderColor = (!isNaN(v) && (v<1||v>100)) ? '#ff6b6b' : '';
+});
+
+// 카드 밖 클릭 파티클
+document.addEventListener('click', e => {
+  if (!e.target.closest('.card') && !e.target.closest('.achievement-toast')) {
+    burstParticles(e.clientX, e.clientY, CONF_COLS[Math.floor(Math.random()*CONF_COLS.length)], 8);
+  }
+});
+
+init();
+
+/* ═══════════════════════════════════════════════════════════════
+   🌈  숫자 키패드 (모바일 편의용)
+═══════════════════════════════════════════════════════════════ */
+(function buildKeypad() {
+  const card = document.getElementById('card');
+  const kpWrap = document.createElement('div');
+  kpWrap.id = 'keypadWrap';
+  kpWrap.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px;';
+  const keys = [7,8,9,4,5,6,1,2,3,'←',0,'✓'];
+  keys.forEach(k => {
+    const btn = document.createElement('button');
+    btn.textContent = k;
+    btn.style.cssText = `font-family:'Jua',sans-serif;font-size:20px;padding:13px 0;border:1.5px solid rgba(255,255,255,0.13);border-radius:12px;background:rgba(255,255,255,0.07);color:#fff;cursor:pointer;transition:background 0.15s,transform 0.1s;user-select:none;`;
+    btn.addEventListener('mouseenter', () => btn.style.background='rgba(255,255,255,0.16)');
+    btn.addEventListener('mouseleave', () => btn.style.background='rgba(255,255,255,0.07)');
+    btn.addEventListener('click', () => {
+      soundClick();
+      const input = document.getElementById('guess');
+      if (k === '←') { input.value = input.value.slice(0,-1); }
+      else if (k === '✓') { check(); }
+      else { if (input.value.length < 3) input.value += k; }
+      input.dispatchEvent(new Event('input'));
+    });
+    kpWrap.appendChild(btn);
+  });
+  const retryBtn = document.getElementById('retryBtn');
+  card.insertBefore(kpWrap, retryBtn);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   📊  게임 통계 패널 (localStorage)
+═══════════════════════════════════════════════════════════════ */
+(function buildStats() {
+  const s = JSON.parse(localStorage.getItem('gameStats') || '{"games":0,"best":999,"wins":0}');
+  const panel = document.createElement('div');
+  panel.style.cssText = 'position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:50;font-family:Jua,sans-serif;';
+  const items = [
+    { icon:'🎮', label:'게임', key:'games', suf:'' },
+    { icon:'🏆', label:'최고', key:'best',  suf:'번' },
+    { icon:'✅', label:'승리', key:'wins',  suf:'' },
+  ];
+  items.forEach(item => {
+    const box = document.createElement('div');
+    box.style.cssText = 'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:7px 14px;text-align:center;color:#fff;font-size:13px;backdrop-filter:blur(10px);';
+    const v = s[item.key];
+    const d = (item.key==='best' && v===999) ? '-' : v + item.suf;
+    box.innerHTML = `<div style="font-size:18px">${item.icon}</div><div style="opacity:.5;font-size:11px">${item.label}</div><div id="stat_${item.key}">${d}</div>`;
+    panel.appendChild(box);
+  });
+  document.body.appendChild(panel);
+
+  window.updateGameStats = function(tries, isWin) {
+    const s = JSON.parse(localStorage.getItem('gameStats') || '{"games":0,"best":999,"wins":0}');
+    s.games++;
+    if (isWin) { s.wins++; if (tries < s.best) s.best = tries; }
+    localStorage.setItem('gameStats', JSON.stringify(s));
+    const bEl = document.getElementById('stat_best');
+    const gEl = document.getElementById('stat_games');
+    const wEl = document.getElementById('stat_wins');
+    if (bEl) bEl.textContent = s.best===999 ? '-' : s.best+'번';
+    if (gEl) gEl.textContent = s.games;
+    if (wEl) wEl.textContent = s.wins;
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🌊  SVG 파도 배경
+═══════════════════════════════════════════════════════════════ */
+(function buildWaves() {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('viewBox','0 0 1440 120');
+  svg.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;height:120px;pointer-events:none;z-index:2;opacity:0.07;';
+  svg.innerHTML = `
+    <path fill="#4fc3f7">
+      <animate attributeName="d" dur="8s" repeatCount="indefinite"
+        values="M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z;
+                M0,60 C240,20 480,100 720,60 C960,20 1200,100 1440,60 L1440,120 L0,120 Z;
+                M0,60 C240,100 480,20 720,60 C960,100 1200,20 1440,60 L1440,120 L0,120 Z"/>
+    </path>
+    <path fill="#e040fb" opacity="0.5">
+      <animate attributeName="d" dur="11s" repeatCount="indefinite"
+        values="M0,80 C360,40 720,110 1080,80 C1260,65 1380,90 1440,80 L1440,120 L0,120 Z;
+                M0,80 C360,110 720,40 1080,80 C1260,95 1380,60 1440,80 L1440,120 L0,120 Z;
+                M0,80 C360,40 720,110 1080,80 C1260,65 1380,90 1440,80 L1440,120 L0,120 Z"/>
+    </path>`;
+  document.body.appendChild(svg);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🤖  AI 자동풀기 버튼 (이분탐색 시연)
+═══════════════════════════════════════════════════════════════ */
+(function buildAutoSolve() {
+  const btn = document.createElement('button');
+  btn.id = 'autoBtn';
+  btn.textContent = '🤖 AI 자동풀기';
+  btn.style.cssText = 'position:fixed;top:16px;right:16px;font-family:Jua,sans-serif;font-size:13px;padding:8px 16px;border:1.5px solid rgba(100,221,23,0.4);border-radius:999px;background:rgba(100,221,23,0.1);color:#64dd17;cursor:pointer;z-index:200;transition:all 0.2s;backdrop-filter:blur(10px);';
+  btn.addEventListener('mouseenter', () => { btn.style.background='rgba(100,221,23,0.22)'; btn.style.transform='scale(1.05)'; });
+  btn.addEventListener('mouseleave', () => { btn.style.background='rgba(100,221,23,0.1)'; btn.style.transform='scale(1)'; });
+  let running = false;
+  btn.addEventListener('click', () => {
+    if (running) return;
+    running = true;
+    btn.textContent = '⏳ 풀고 있어요...';
+    btn.style.opacity = '0.6';
+    let low = 1, high = 100;
+    function doStep() {
+      if (low > high) { running = false; return; }
+      const mid = Math.floor((low + high) / 2);
+      const input = document.getElementById('guess');
+      if (!input || input.disabled) { running = false; btn.textContent='🤖 AI 자동풀기'; btn.style.opacity='1'; return; }
+      input.value = mid;
+      input.dispatchEvent(new Event('input'));
+      floatText(window.innerWidth/2, window.innerHeight/2-80, `🤖 ${mid}!`, '#64dd17');
+      setTimeout(() => {
+        check();
+        if (mid === answer) { running=false; btn.textContent='🤖 AI 자동풀기'; btn.style.opacity='1'; return; }
+        if (mid < answer) low = mid+1; else high = mid-1;
+        setTimeout(doStep, 900);
+      }, 400);
+    }
+    doStep();
+  });
+  document.body.appendChild(btn);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎨  테마 전환 버튼
+═══════════════════════════════════════════════════════════════ */
+(function buildTheme() {
+  const themes = [
+    { name:'🌌 우주', navy:'#0c0c1e' },
+    { name:'🌊 바다', navy:'#001a2e' },
+    { name:'🌲 숲',   navy:'#0a1a0a' },
+    { name:'🌸 봄',   navy:'#1a0a1a' },
+  ];
+  let idx = 0;
+  const btn = document.createElement('button');
+  btn.textContent = themes[0].name;
+  btn.style.cssText = 'position:fixed;top:16px;left:16px;font-family:Jua,sans-serif;font-size:13px;padding:8px 14px;border:1.5px solid rgba(255,255,255,0.18);border-radius:999px;background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.8);cursor:pointer;z-index:200;backdrop-filter:blur(10px);transition:all 0.2s;';
+  btn.addEventListener('mouseenter', () => btn.style.background='rgba(255,255,255,0.14)');
+  btn.addEventListener('mouseleave', () => btn.style.background='rgba(255,255,255,0.07)');
+  btn.addEventListener('click', () => {
+    idx = (idx+1) % themes.length;
+    const t = themes[idx];
+    btn.textContent = t.name;
+    document.body.style.background = t.navy;
+    soundClick();
+    floatText(window.innerWidth/2, window.innerHeight/2-100, t.name, '#ffd700');
+  });
+  document.body.appendChild(btn);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   ⌨️  키보드 단축키 (R=재시작, 1~4=난이도)
+═══════════════════════════════════════════════════════════════ */
+(function buildShortcuts() {
+  const guide = document.createElement('div');
+  guide.style.cssText = 'position:fixed;bottom:80px;right:16px;font-family:Nanum Gothic,sans-serif;font-size:11px;color:rgba(255,255,255,0.28);text-align:right;line-height:1.9;pointer-events:none;z-index:50;';
+  guide.innerHTML = '<div>⌨️ <b>Enter</b> = 확인</div><div>⌨️ <b>R</b> = 재시작</div><div>⌨️ <b>1~4</b> = 난이도</div>';
+  document.body.appendChild(guide);
+  document.addEventListener('keydown', e => {
+    if ((e.key==='r'||e.key==='R') && !e.ctrlKey && e.target.tagName!=='INPUT') {
+      const rb = document.getElementById('retryBtn');
+      if (rb && rb.classList.contains('show')) { soundReset(); rb.click(); }
+    }
+    if (e.target.tagName==='INPUT') return;
+    if (e.key==='1') document.querySelector('[data-mode="easy"]')?.click();
+    if (e.key==='2') document.querySelector('[data-mode="normal"]')?.click();
+    if (e.key==='3') document.querySelector('[data-mode="hard"]')?.click();
+    if (e.key==='4') document.querySelector('[data-mode="hell"]')?.click();
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🌡️  화면 가장자리 온도 글로우
+═══════════════════════════════════════════════════════════════ */
+(function buildEdgeGlow() {
+  const glow = document.createElement('div');
+  glow.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;transition:opacity 0.6s,box-shadow 0.6s;box-shadow:inset 0 0 80px 20px rgba(79,195,247,0);';
+  document.body.appendChild(glow);
+  window.setEdgeGlow = function(heat) {
+    if (heat >= 0.90)      { glow.style.opacity='1'; glow.style.boxShadow='inset 0 0 110px 35px rgba(255,50,50,0.32)'; }
+    else if (heat >= 0.70) { glow.style.opacity='1'; glow.style.boxShadow='inset 0 0 90px 25px rgba(255,152,0,0.22)'; }
+    else if (heat >= 0.50) { glow.style.opacity='1'; glow.style.boxShadow='inset 0 0 70px 18px rgba(255,215,0,0.16)'; }
+    else                   { glow.style.opacity='0'; }
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   💡  10회, 20회, 30회 자동 힌트
+═══════════════════════════════════════════════════════════════ */
+window.checkMegaHint = function(t, ans) {
+  if (t===10) { const lo=Math.floor(ans/10)*10||1; showAchievement('💡',`힌트: ${lo}~${Math.min(lo+9,100)} 사이에 있어요!`); }
+  if (t===20) { const lo=Math.floor(ans/5)*5||1;  showAchievement('🔍',`힌트: ${lo}~${Math.min(lo+4,100)} 사이에 있어요!`); }
+  if (t===30) { showAchievement('🎁',`마지막 힌트: ${ans%2===0?'짝수':'홀수'}예요!`); }
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   🌠  유성우 (정답 시)
+═══════════════════════════════════════════════════════════════ */
+(function buildMeteors() {
+  const st = document.createElement('style');
+  st.textContent = '@keyframes meteorFall{from{opacity:1;transform:translateY(-20px) rotate(25deg)}to{opacity:0;transform:translateY(110vh) rotate(25deg)}}';
+  document.head.appendChild(st);
+  window.triggerMeteorShower = function() {
+    for (let i=0;i<22;i++) setTimeout(()=>{
+      const m = document.createElement('div');
+      m.style.cssText = `position:fixed;left:${Math.random()*100}vw;top:-30px;width:2px;height:${70+Math.random()*110}px;background:linear-gradient(180deg,rgba(255,255,255,0.9),rgba(255,255,255,0));border-radius:99px;pointer-events:none;z-index:998;animation:meteorFall ${0.45+Math.random()*0.5}s linear forwards;box-shadow:0 0 8px rgba(255,255,255,0.4);`;
+      document.body.appendChild(m);
+      setTimeout(()=>m.remove(),1100);
+    }, i*70);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   ✨  떠다니는 별 장식 12개
+═══════════════════════════════════════════════════════════════ */
+(function buildFloatStars() {
+  const st = document.createElement('style');
+  st.textContent = '.fstar{position:fixed;pointer-events:none;z-index:5;animation:fstarAnim var(--d,8s) ease-in-out infinite;opacity:0.35;}@keyframes fstarAnim{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(var(--tx,10px),var(--ty,-18px)) rotate(180deg);opacity:0.65;}}';
+  document.head.appendChild(st);
+  ['⭐','✨','💫','🌟','⚡','🔮','💎','🌸','🍀','🎆','🎇','🌙'].forEach((e,i)=>{
+    const el = document.createElement('div');
+    el.className = 'fstar';
+    el.textContent = e;
+    el.style.cssText = `left:${Math.random()*100}vw;top:${Math.random()*100}vh;--d:${6+Math.random()*8}s;--tx:${(Math.random()-.5)*40}px;--ty:${-(10+Math.random()*30)}px;animation-delay:${Math.random()*6}s;font-size:${11+Math.random()*12}px;`;
+    document.body.appendChild(el);
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎭  별자리 연결선 (배경 클릭으로 점 찍기)
+═══════════════════════════════════════════════════════════════ */
+(function buildConstellation() {
+  const cv = document.createElement('canvas');
+  cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:4;opacity:0.2;';
+  cv.width=window.innerWidth; cv.height=window.innerHeight;
+  document.body.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  const pts = [];
+  document.addEventListener('click', e => {
+    if (e.target.closest('.card')||e.target.closest('button')) return;
+    pts.push({x:e.clientX,y:e.clientY});
+    if (pts.length>7) pts.shift();
+    ctx.clearRect(0,0,cv.width,cv.height);
+    if (pts.length<2) return;
+    ctx.beginPath(); ctx.strokeStyle='rgba(79,195,247,0.7)'; ctx.lineWidth=1; ctx.setLineDash([4,6]);
+    ctx.moveTo(pts[0].x,pts[0].y);
+    pts.forEach(p=>ctx.lineTo(p.x,p.y));
+    ctx.stroke();
+    pts.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2); ctx.fillStyle='#4fc3f7'; ctx.fill(); });
+  });
+  window.addEventListener('resize',()=>{ cv.width=window.innerWidth; cv.height=window.innerHeight; });
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎵  앰비언트 드론 (조용한 배경음)
+═══════════════════════════════════════════════════════════════ */
+(function buildAmbient() {
+  let started = false;
+  function start() {
+    if (started) return; started = true;
+    const a = getAC();
+    [[55,0.013,12],[82,0.009,17],[110,0.007,23]].forEach(([f,v,dur])=>{
+      (function loop(){
+        const o=a.createOscillator(),g=a.createGain(),now=a.currentTime;
+        o.connect(g); g.connect(a.destination); o.type='sine'; o.frequency.value=f;
+        g.gain.setValueAtTime(0,now); g.gain.linearRampToValueAtTime(v,now+1.5);
+        g.gain.linearRampToValueAtTime(0,now+dur-0.5);
+        o.start(now); o.stop(now+dur);
+        setTimeout(loop,(dur-0.15)*1000);
+      })();
+    });
+  }
+  document.addEventListener('click',start,{once:true});
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🔄  check / init 확장 — 새 기능 연동
+═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   🎰  랜덤 이벤트 시스템 (가끔 특별한 일이 일어나요!)
+═══════════════════════════════════════════════════════════════ */
+(function buildRandomEvents() {
+  const events = [
+    {
+      prob: 0.04,
+      name: '🌈 무지개 시간!',
+      action: () => {
+        document.body.style.filter = 'hue-rotate(0deg)';
+        let deg = 0;
+        const iv = setInterval(() => {
+          deg += 3;
+          document.body.style.filter = `hue-rotate(${deg}deg)`;
+          if (deg >= 360) { clearInterval(iv); document.body.style.filter = ''; }
+        }, 30);
+        floatText(window.innerWidth/2, window.innerHeight/2-60, '🌈 무지개 시간!', '#ff6b6b');
+      }
+    },
+    {
+      prob: 0.03,
+      name: '⚡ 번개 치기!',
+      action: () => {
+        for (let i = 0; i < 5; i++) {
+          setTimeout(() => screenFlash('rgba(255,255,200,0.4)'), i * 100);
+        }
+        beep(60, 'sawtooth', 0.3, 0.2, 0);
+        floatText(window.innerWidth/2, window.innerHeight/2-60, '⚡ 번개!!', '#ffd700');
+      }
+    },
+    {
+      prob: 0.03,
+      name: '💎 보너스 파티클!',
+      action: () => {
+        for (let i = 0; i < 8; i++) {
+          setTimeout(() => {
+            burstParticles(
+              Math.random() * window.innerWidth,
+              Math.random() * window.innerHeight,
+              ['#ffd700','#ff6b6b','#4fc3f7','#64dd17'][Math.floor(Math.random()*4)],
+              10
+            );
+          }, i * 150);
+        }
+        floatText(window.innerWidth/2, window.innerHeight/2-60, '💎 보너스!!', '#e040fb');
+      }
+    },
+    {
+      prob: 0.02,
+      name: '🌀 회전!',
+      action: () => {
+        const card = document.getElementById('card');
+        card.style.transition = 'transform 1s ease';
+        card.style.transform  = 'rotate(360deg)';
+        setTimeout(() => {
+          card.style.transition = 'transform 0.5s ease';
+          card.style.transform  = 'rotate(0deg)';
+          setTimeout(() => { card.style.transition = ''; card.style.transform = ''; }, 600);
+        }, 1100);
+        floatText(window.innerWidth/2, window.innerHeight/2-60, '🌀 휙!!', '#ff9800');
+      }
+    },
+  ];
+
+  window.maybeRandomEvent = function() {
+    for (const ev of events) {
+      if (Math.random() < ev.prob) {
+        ev.action();
+        return;
+      }
+    }
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎪  특수 숫자 이스터에그 (특정 숫자 입력 시 깜짝 반응)
+═══════════════════════════════════════════════════════════════ */
+(function buildEasterEggs() {
+
+  // 환희의 송가 멜로디 (베토벤 9번) — "Six Seven is my Six Seven" 가사 맞춤
+  // 음표: [주파수Hz, 박자(초)]
+  const ODE_TO_JOY = [
+    // "Six- Se-ven  is  my  Six  Se- ven"
+    [330,0.22],[330,0.22],[349,0.22],[392,0.22],
+    [392,0.22],[349,0.22],[330,0.22],[294,0.22],
+    // "Six- Se-ven  is  my  Six  Se- ven"
+    [262,0.22],[262,0.22],[294,0.22],[330,0.22],
+    [330,0.32],[294,0.10],[294,0.44],
+    // "Six- Se-ven  is  my  Six  Se- ven"
+    [330,0.22],[330,0.22],[349,0.22],[392,0.22],
+    [392,0.22],[349,0.22],[330,0.22],[294,0.22],
+    // "Six- Se-ven  is  my— Six!"
+    [262,0.22],[262,0.22],[294,0.22],[330,0.22],
+    [294,0.32],[262,0.10],[262,0.44],
+  ];
+
+  // 가사 (음표에 맞춰)
+  const LYRICS = [
+    'Six','Se','ven','is','my','Six','Se','ven',
+    'Six','Se','ven','is','my','Six','Se','ven',
+    'Six','Se','ven','is','my','Six','Se','ven',
+    'Six','Se','ven','is','my','Six','!','🎶',
+  ];
+
+  // 합창단 목소리 (Web Speech API로 단어마다 읽기)
+  function singWithVoice() {
+    if (!window.speechSynthesis) return;
+    speechSynthesis.cancel();
+
+    // 가사를 문장으로 묶어서 4번 반복
+    const lines = [
+      'Six Seven is my Six Seven',
+      'Six Seven is my Six Seven',
+      'Six Seven is my Six Seven',
+      'Six Seven is my Six Seven',
+    ];
+
+    // 각 줄을 박자에 맞게 딜레이해서 읽기
+    const lineDurations = [1.76, 1.44, 1.76, 1.44]; // 초 단위 (ODE_TO_JOY 박자 합산)
+    let cumDelay = 300; // ms
+
+    lines.forEach((line, i) => {
+      setTimeout(() => {
+        const utt = new SpeechSynthesisUtterance(line);
+        utt.lang  = 'en-US';
+        utt.rate  = 1.15;      // 빠르게
+        utt.pitch = 1.3 - i * 0.1; // 줄마다 음높이 조금씩 다르게
+        utt.volume = 0.9;
+
+        // 목소리 선택 (여성 영어 목소리 우선)
+        const voices = speechSynthesis.getVoices();
+        const enVoice = voices.find(v =>
+          v.lang.startsWith('en') && v.name.toLowerCase().includes('female')
+        ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+        if (enVoice) utt.voice = enVoice;
+
+        speechSynthesis.speak(utt);
+      }, cumDelay);
+
+      cumDelay += lineDurations[i] * 1000;
+    });
+
+    // 마지막에 "Six Seven!!" 강조
+    setTimeout(() => {
+      const shout = new SpeechSynthesisUtterance('Six Seven!!');
+      shout.lang  = 'en-US';
+      shout.rate  = 0.8;
+      shout.pitch = 1.8;
+      shout.volume = 1.0;
+      speechSynthesis.speak(shout);
+    }, cumDelay);
+  }
+
+  // 환희의 송가 연주 + 가사 자막
+  function playOdeToJoy() {
+    const a = getAC();
+
+    // 합창단 화음 (주선율 + 3도 위 + 5도 위)
+    const chords = [1, 1.25, 1.5];
+
+    let time = a.currentTime + 0.1;
+    ODE_TO_JOY.forEach(([freq, dur], i) => {
+      chords.forEach((ratio, ci) => {
+        const osc  = a.createOscillator();
+        const gain = a.createGain();
+        osc.connect(gain); gain.connect(a.destination);
+        osc.type = ci === 0 ? 'sine' : ci === 1 ? 'triangle' : 'sine';
+        osc.frequency.value = freq * ratio;
+        const vol = ci === 0 ? 0.22 : ci === 1 ? 0.12 : 0.08;
+        gain.gain.setValueAtTime(vol, time);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + dur - 0.02);
+        osc.start(time); osc.stop(time + dur);
+      });
+
+      // 가사 자막 표시
+      const lyricDelay = (time - a.currentTime) * 1000;
+      const word = LYRICS[i] || '';
+      setTimeout(() => {
+        showLyric(word, freq);
+      }, lyricDelay);
+
+      time += dur;
+    });
+
+    return (time - a.currentTime) * 1000;
+  }
+
+  // 가사 자막 팝업
+  let lyricEl = null;
+  function showLyric(word, freq) {
+    if (!lyricEl) {
+      lyricEl = document.createElement('div');
+      lyricEl.style.cssText = `
+        position:fixed;
+        bottom:160px;
+        left:50%;
+        transform:translateX(-50%);
+        font-family:'Jua',sans-serif;
+        font-size:clamp(22px,5vw,36px);
+        color:#ffd700;
+        text-shadow:0 0 20px rgba(255,215,0,0.8), 0 2px 4px rgba(0,0,0,0.8);
+        z-index:9600;
+        pointer-events:none;
+        white-space:nowrap;
+        text-align:center;
+        transition:all 0.08s;
+        letter-spacing:2px;
+      `;
+      document.body.appendChild(lyricEl);
+    }
+    const hue = Math.floor(((freq - 260) / 140) * 60);
+    lyricEl.style.color = `hsl(${hue + 40}, 100%, 65%)`;
+    lyricEl.style.transform = `translateX(-50%) scale(${0.9 + Math.random()*0.3})`;
+    lyricEl.textContent = word;
+  }
+
+  // 졸라맨 SVG (입 열고 노래하는 버전)
+  function makeStickman(x, delay, idx) {
+    const el = document.createElement('div');
+    const row = Math.floor(idx / 20);
+    // 화면 전체를 골고루 덮기
+    const bottomOffset = (row / 4) * (window.innerHeight * 0.85);
+    el.style.cssText = `
+      position:fixed;
+      bottom:${bottomOffset}px;
+      left:${x}px;
+      z-index:99999;
+      pointer-events:none;
+      animation:stickRun 4.5s ${delay}s linear forwards;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:1px;
+    `;
+
+    const lyricChunks = ['Six','Seven','is my','Six','Seven!','🎵'];
+    const bubble = document.createElement('div');
+    bubble.textContent = lyricChunks[row % lyricChunks.length];
+    bubble.style.cssText = `
+      font-family:'Jua',sans-serif;
+      font-size:13px;
+      background:rgba(255,255,255,0.95);
+      color:#222;
+      border-radius:6px;
+      padding:2px 6px;
+      white-space:nowrap;
+      box-shadow:0 1px 4px rgba(0,0,0,0.4);
+      animation:bubbleBob 0.4s ${delay + Math.random()*0.3}s ease-in-out infinite alternate;
+    `;
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('width','32');
+    svg.setAttribute('height','52');
+    svg.setAttribute('viewBox','0 0 22 38');
+    const colors = ['#fff','#ffd700','#ff6b6b','#4fc3f7','#64dd17','#e040fb'];
+    const col2 = colors[row % colors.length];
+    svg.innerHTML = `
+      <circle cx="11" cy="5" r="4.5" fill="${col2}" stroke="#333" stroke-width="1.2"/>
+      <ellipse cx="11" cy="6.5" rx="1.5" ry="2" fill="#333"/>
+      <line x1="11" y1="9.5" x2="11" y2="24" stroke="${col2}" stroke-width="1.8"/>
+      <line x1="3"  y1="15" x2="19" y2="15" stroke="${col2}" stroke-width="1.8"/>
+      <line x1="11" y1="24" x2="5"  y2="36" stroke="${col2}" stroke-width="1.8"/>
+      <line x1="11" y1="24" x2="17" y2="36" stroke="${col2}" stroke-width="1.8"/>
+    `;
+
+    el.appendChild(bubble);
+    el.appendChild(svg);
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), (4.5 + delay + 1) * 1000);
+  }
+
+  // 졸라맨 행진 + 환희의 송가 스타일
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes stickRun {
+      0%   { transform:translateX(0)     scaleX(1);  opacity:1; }
+      45%  { transform:translateX(105vw) scaleX(1);  opacity:1; }
+      50%  { transform:translateX(105vw) scaleX(-1); opacity:1; }
+      95%  { transform:translateX(-15vw) scaleX(-1); opacity:1; }
+      100% { transform:translateX(-15vw) scaleX(-1); opacity:0; }
+    }
+    @keyframes bubbleBob {
+      from { transform:translateY(0); }
+      to   { transform:translateY(-3px); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  function launchStickArmy() {
+    // 화면 위에 "🎵 합창단 등장!" 텍스트
+    floatText(window.innerWidth/2, window.innerHeight/2 - 140, '🎼 합창단 등장!!', '#ffd700');
+    setTimeout(() => floatText(window.innerWidth/2, window.innerHeight/2 - 110, '♪ Six Seven is my Six Seven ♪', '#ff6b6b'), 400);
+
+    // 100명 5줄로 배치 (줄당 20명)
+    for (let i = 0; i < 100; i++) {
+      const col    = i % 20;
+      const startX = -30 - col * 30;
+      const delay  = col * 0.07;
+      makeStickman(startX, delay, i);
+    }
+
+    // 환희의 송가 연주 + 목소리 합창 동시 시작
+    setTimeout(() => {
+      playOdeToJoy();
+      // 목소리 로드 기다렸다가 시작
+      if (speechSynthesis.getVoices().length === 0) {
+        speechSynthesis.addEventListener('voiceschanged', singWithVoice, { once: true });
+      } else {
+        singWithVoice();
+      }
+    }, 300);
+
+    // 연주 끝나면 가사 자막 제거
+    setTimeout(() => {
+      if (lyricEl) { lyricEl.remove(); lyricEl = null; }
+      speechSynthesis.cancel();
+    }, 9000);
+  }
+
+  const eggs = {
+    67: () => {
+      launchStickArmy();
+    },
+    42: () => {
+      floatText(window.innerWidth/2, window.innerHeight/2-80, '🌌 우주의 답은 42!', '#4fc3f7');
+      starBurst(window.innerWidth/2, window.innerHeight/2, 8);
+    },
+    1: () => {
+      floatText(window.innerWidth/2, window.innerHeight/2-80, '1️⃣ 일! 일! 일!', '#ffd700');
+    },
+    100: () => {
+      floatText(window.innerWidth/2, window.innerHeight/2-80, '💯 백점 만점!', '#ff6b6b');
+      launchConfetti(60);
+    },
+    7: () => {
+      floatText(window.innerWidth/2, window.innerHeight/2-80, '🍀 럭키 세븐!', '#64dd17');
+      starBurst(window.innerWidth/2, window.innerHeight/2, 7);
+    },
+    77: () => {
+      floatText(window.innerWidth/2, window.innerHeight/2-80, '🎰 럭키 세버세버!', '#ff9800');
+      beep(700,'sine',0.1,0.2,0); beep(770,'sine',0.1,0.2,0.1);
+    },
+    99: () => {
+      floatText(window.innerWidth/2, window.innerHeight/2-80, '💪 아슬아슬 99!', '#e040fb');
+    },
+    50: () => {
+      floatText(window.innerWidth/2, window.innerHeight/2-80, '⚖️ 딱 중간!', '#00e5ff');
+    },
+  };
+
+  document.getElementById('guess').addEventListener('input', function() {
+    const v = parseInt(this.value, 10);
+    if (eggs[v]) eggs[v]();
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   📡  실시간 시도 진행 막대 (카드 상단)
+═══════════════════════════════════════════════════════════════ */
+(function buildProgressBar() {
+  const bar = document.createElement('div');
+  bar.style.cssText = `
+    position:absolute;
+    top:0; left:0; right:0;
+    height:4px;
+    background:rgba(255,255,255,0.08);
+    border-radius:999px 999px 0 0;
+    overflow:hidden;
+  `;
+  const fill = document.createElement('div');
+  fill.id = 'topProgressFill';
+  fill.style.cssText = `
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#4fc3f7,#e040fb,#ffd700);
+    border-radius:999px;
+    transition:width 0.4s ease;
+  `;
+  bar.appendChild(fill);
+  document.getElementById('card').appendChild(bar);
+
+  window.updateTopProgress = function(tries) {
+    const pct = Math.min((tries / 20) * 100, 100);
+    fill.style.width = pct + '%';
+    if (tries >= 15) fill.style.background = 'linear-gradient(90deg,#ff6b6b,#ff0000)';
+    else if (tries >= 10) fill.style.background = 'linear-gradient(90deg,#ff9800,#ff6b6b)';
+    else if (tries >= 5)  fill.style.background = 'linear-gradient(90deg,#ffd700,#ff9800)';
+    else fill.style.background = 'linear-gradient(90deg,#4fc3f7,#e040fb,#ffd700)';
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎤  숫자 음성 읽기 (Web Speech API)
+═══════════════════════════════════════════════════════════════ */
+(function buildSpeech() {
+  if (!window.speechSynthesis) return;
+
+  const btn = document.createElement('button');
+  btn.id = 'speechBtn';
+  btn.textContent = '🔇';
+  btn.title = '음성 켜기/끄기';
+  btn.style.cssText = `
+    position:absolute;
+    top:12px; right:12px;
+    font-size:16px;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:50%;
+    width:34px; height:34px;
+    color:#fff;
+    cursor:pointer;
+    z-index:20;
+    transition:all 0.2s;
+    display:flex; align-items:center; justify-content:center;
+  `;
+  document.getElementById('card').appendChild(btn);
+
+  let speechOn = false;
+  btn.addEventListener('click', () => {
+    speechOn = !speechOn;
+    btn.textContent = speechOn ? '🔊' : '🔇';
+    soundClick();
+  });
+
+  window.speak = function(text) {
+    if (!speechOn) return;
+    speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = 'ko-KR';
+    utt.rate = 1.1;
+    utt.pitch = 1.2;
+    speechSynthesis.speak(utt);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   📐  이분탐색 가이드 패널 (최적 다음 추측 표시)
+═══════════════════════════════════════════════════════════════ */
+(function buildBinaryHint() {
+  const panel = document.createElement('div');
+  panel.id = 'binaryPanel';
+  panel.style.cssText = `
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.09);
+    border-radius:14px;
+    padding:10px 14px;
+    margin-bottom:14px;
+    font-family:'Jua',sans-serif;
+    font-size:13px;
+    color:rgba(255,255,255,0.6);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  `;
+  panel.innerHTML = `
+    <span>🧠 이분탐색 추천</span>
+    <span id="binaryGuess" style="color:#64dd17;font-size:18px;">50</span>
+    <span style="font-size:11px;opacity:0.5;">최적의 다음 숫자</span>
+  `;
+  const rangeTracker = document.querySelector('.range-tracker');
+  if (rangeTracker) rangeTracker.parentNode.insertBefore(panel, rangeTracker);
+
+  window.updateBinaryHint = function(low, high) {
+    const mid = Math.floor((low + high) / 2);
+    const el = document.getElementById('binaryGuess');
+    if (el) {
+      el.textContent = mid;
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = 'bump 0.35s cubic-bezier(0.34,1.56,0.64,1)';
+    }
+  };
+
+  window.updateBinaryHint(1, 100);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🌊  입력창 포커스 시 물결 효과
+═══════════════════════════════════════════════════════════════ */
+(function buildInputWave() {
+  const input = document.getElementById('guess');
+  if (!input) return;
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes inputWavePulse {
+      0%   { box-shadow: 0 0 0 0 rgba(79,195,247,0.5); }
+      70%  { box-shadow: 0 0 0 12px rgba(79,195,247,0); }
+      100% { box-shadow: 0 0 0 0 rgba(79,195,247,0); }
+    }
+    input[type=number]:focus {
+      animation: inputWavePulse 1.5s ease-in-out infinite !important;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🏆  명예의 전당 (최고 기록 3개 보관)
+═══════════════════════════════════════════════════════════════ */
+(function buildHallOfFame() {
+  function getHallData() {
+    return JSON.parse(localStorage.getItem('hallOfFame') || '[]');
+  }
+
+  function addHallEntry(tries, mode) {
+    const hall = getHallData();
+    const now  = new Date();
+    const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+    hall.push({ tries, mode, date: dateStr });
+    hall.sort((a,b) => a.tries - b.tries);
+    const top3 = hall.slice(0, 3);
+    localStorage.setItem('hallOfFame', JSON.stringify(top3));
+    return top3;
+  }
+
+  window.showHallOfFame = function(tries, mode) {
+    const top3 = addHallEntry(tries, mode);
+    const medals = ['🥇','🥈','🥉'];
+
+    const popup = document.createElement('div');
+    popup.style.cssText = `
+      position:fixed;
+      top:50%;left:50%;
+      transform:translate(-50%,-50%) scale(0.8);
+      background:rgba(15,15,35,0.96);
+      backdrop-filter:blur(20px);
+      border:1px solid rgba(255,215,0,0.35);
+      border-radius:22px;
+      padding:28px 32px;
+      z-index:5000;
+      font-family:'Jua',sans-serif;
+      color:#fff;
+      text-align:center;
+      min-width:260px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.7), 0 0 30px rgba(255,215,0,0.2);
+      animation:fadeScaleIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    `;
+
+    let rows = top3.map((e,i) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <span>${medals[i]}</span>
+        <span style="color:#ffd700;font-size:20px;">${e.tries}번</span>
+        <span style="font-size:11px;opacity:0.5;">${e.mode} · ${e.date}</span>
+      </div>
+    `).join('');
+
+    popup.innerHTML = `
+      <div style="font-size:24px;margin-bottom:6px;">🏆 명예의 전당</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:16px;">최고 기록 TOP 3</div>
+      ${rows}
+      <button onclick="this.parentNode.remove()" style="margin-top:18px;font-family:'Jua',sans-serif;font-size:15px;padding:10px 28px;border:none;border-radius:999px;background:linear-gradient(135deg,#ffd700,#ff9800);color:#0c0c1e;cursor:pointer;font-weight:800;">닫기</button>
+    `;
+    document.body.appendChild(popup);
+    setTimeout(() => { if (popup.parentNode) popup.remove(); }, 6000);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎲  "운빨" 버튼 — 랜덤 숫자 자동 입력
+═══════════════════════════════════════════════════════════════ */
+(function buildLuckyBtn() {
+  const btn = document.createElement('button');
+  btn.textContent = '🎲 운빨';
+  btn.style.cssText = `
+    font-family:'Jua',sans-serif;
+    font-size:14px;
+    padding:8px 16px;
+    border:1.5px solid rgba(255,215,0,0.3);
+    border-radius:999px;
+    background:rgba(255,215,0,0.08);
+    color:#ffd700;
+    cursor:pointer;
+    margin-top:8px;
+    width:100%;
+    transition:all 0.2s;
+  `;
+  btn.addEventListener('mouseenter', () => btn.style.background='rgba(255,215,0,0.18)');
+  btn.addEventListener('mouseleave', () => btn.style.background='rgba(255,215,0,0.08)');
+  btn.addEventListener('click', () => {
+    const input = document.getElementById('guess');
+    if (input.disabled) return;
+    const lucky = Math.floor(Math.random() * 100) + 1;
+    input.value = lucky;
+    input.dispatchEvent(new Event('input'));
+    soundClick();
+    floatText(input.getBoundingClientRect().left + 40, input.getBoundingClientRect().top - 20, `🎲 ${lucky}!`, '#ffd700');
+    if (window.maybeRandomEvent) maybeRandomEvent();
+  });
+
+  const inputRow = document.querySelector('.input-row');
+  if (inputRow) inputRow.parentNode.insertBefore(btn, inputRow.nextSibling);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🔁  check / init 추가 확장
+═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   🌈  정답 카운트다운 숫자 (대형 팝업)
+═══════════════════════════════════════════════════════════════ */
+(function buildWinPopup() {
+  window.showBigWin = function(tries) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      z-index:4000; pointer-events:none;
+    `;
+    const num = document.createElement('div');
+    num.style.cssText = `
+      font-family:'Jua',sans-serif;
+      font-size:clamp(80px,20vw,180px);
+      color:#ffd700;
+      text-shadow:0 0 40px rgba(255,215,0,0.8), 0 0 100px rgba(255,215,0,0.4);
+      animation:bigNumPop 1.2s cubic-bezier(0.34,1.56,0.64,1) forwards;
+      opacity:0;
+    `;
+    num.textContent = tries;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes bigNumPop {
+        0%  { opacity:0; transform:scale(0.2) rotate(-15deg); }
+        50% { opacity:1; transform:scale(1.2) rotate(5deg); }
+        70% { transform:scale(0.95) rotate(-2deg); }
+        100%{ opacity:0; transform:scale(1.5) rotate(0deg); }
+      }
+    `;
+    document.head.appendChild(style);
+    overlay.appendChild(num);
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.remove(), 1300);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🌀  화면 흔들기 효과 (틀릴 때)
+═══════════════════════════════════════════════════════════════ */
+(function buildScreenShake() {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes screenShake {
+      0%,100%{ transform:translate(0,0); }
+      10%    { transform:translate(-4px,-2px); }
+      20%    { transform:translate(4px,2px); }
+      30%    { transform:translate(-4px,1px); }
+      40%    { transform:translate(4px,-1px); }
+      50%    { transform:translate(-2px,2px); }
+      60%    { transform:translate(2px,-2px); }
+      70%    { transform:translate(-2px,0); }
+      80%    { transform:translate(2px,0); }
+      90%    { transform:translate(-1px,0); }
+    }
+    body.screen-shaking {
+      animation: screenShake 0.45s ease;
+    }
+  `;
+  document.head.appendChild(style);
+
+  window.shakeScreen = function() {
+    document.body.classList.remove('screen-shaking');
+    void document.body.offsetWidth;
+    document.body.classList.add('screen-shaking');
+    setTimeout(() => document.body.classList.remove('screen-shaking'), 500);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎪  입력 숫자 크기 미리보기 (입력창 옆 미니 게이지)
+═══════════════════════════════════════════════════════════════ */
+(function buildInputPreview() {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `
+    margin-bottom:10px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    padding:8px 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Jua',sans-serif;
+    font-size:13px;
+    color:rgba(255,255,255,0.5);
+    transition:opacity 0.3s;
+    opacity:0;
+  `;
+  wrap.innerHTML = `
+    <span>📍</span>
+    <div style="flex:1;background:rgba(255,255,255,0.1);height:8px;border-radius:99px;overflow:hidden;">
+      <div id="inputPreviewFill" style="height:100%;width:0%;background:linear-gradient(90deg,#4fc3f7,#e040fb);border-radius:99px;transition:width 0.2s,background 0.2s;"></div>
+    </div>
+    <span id="inputPreviewNum" style="min-width:28px;text-align:right;color:#fff;">-</span>
+  `;
+
+  const inputRow = document.querySelector('.input-row');
+  if (inputRow) inputRow.parentNode.insertBefore(wrap, inputRow);
+
+  document.getElementById('guess').addEventListener('input', function() {
+    const v = parseInt(this.value, 10);
+    if (isNaN(v) || v < 1 || v > 100) {
+      wrap.style.opacity = '0';
+      return;
+    }
+    wrap.style.opacity = '1';
+    const pct = ((v - 1) / 99) * 100;
+    const fill = document.getElementById('inputPreviewFill');
+    const num  = document.getElementById('inputPreviewNum');
+    if (fill) fill.style.width = pct + '%';
+    if (num)  num.textContent  = v;
+
+    if (v <= 25)       { if(fill) fill.style.background='linear-gradient(90deg,#00e5ff,#4fc3f7)'; }
+    else if (v <= 50)  { if(fill) fill.style.background='linear-gradient(90deg,#4fc3f7,#ffd700)'; }
+    else if (v <= 75)  { if(fill) fill.style.background='linear-gradient(90deg,#ffd700,#ff9800)'; }
+    else               { if(fill) fill.style.background='linear-gradient(90deg,#ff9800,#ff6b6b)'; }
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎠  힌트 이모지 애니메이션 강화
+═══════════════════════════════════════════════════════════════ */
+(function buildHintEmoji() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .hint-emoji {
+      display:inline-block;
+      margin-right:6px;
+      animation:hintEmojiSpin 0.6s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes hintEmojiSpin {
+      0%  { transform:scale(0) rotate(-180deg); }
+      60% { transform:scale(1.4) rotate(15deg); }
+      100%{ transform:scale(1) rotate(0); }
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🌙  다크/라이트 토글 (완전 실험적)
+═══════════════════════════════════════════════════════════════ */
+(function buildDarkToggle() {
+  let isDark = true;
+  const btn = document.createElement('button');
+  btn.textContent = '🌙';
+  btn.title = '밝기 토글';
+  btn.style.cssText = `
+    position:fixed;
+    bottom:80px;
+    left:16px;
+    width:36px; height:36px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,0.2);
+    background:rgba(255,255,255,0.08);
+    color:#fff;
+    font-size:16px;
+    cursor:pointer;
+    z-index:200;
+    transition:all 0.3s;
+    backdrop-filter:blur(10px);
+    display:flex; align-items:center; justify-content:center;
+  `;
+  btn.addEventListener('click', () => {
+    isDark = !isDark;
+    btn.textContent = isDark ? '🌙' : '☀️';
+    const card = document.getElementById('card');
+    if (!isDark) {
+      document.body.style.background = '#f0f4ff';
+      card.style.background = 'rgba(0,0,0,0.06)';
+      card.style.borderColor = 'rgba(0,0,0,0.12)';
+      card.style.color = '#1a1a2e';
+    } else {
+      document.body.style.background = '';
+      card.style.background = '';
+      card.style.borderColor = '';
+      card.style.color = '';
+    }
+    soundClick();
+  });
+  document.body.appendChild(btn);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎯  정확도 그래프 (히스토리 기반 시각화)
+═══════════════════════════════════════════════════════════════ */
+(function buildAccuracyGraph() {
+  const canvas = document.createElement('canvas');
+  canvas.id = 'accuracyCanvas';
+  canvas.style.cssText = `
+    width:100%;
+    height:60px;
+    border-radius:10px;
+    background:rgba(255,255,255,0.04);
+    margin-bottom:12px;
+    display:none;
+  `;
+  canvas.width  = 480;
+  canvas.height = 60;
+
+  const rangeTracker = document.querySelector('.range-tracker');
+  if (rangeTracker) rangeTracker.parentNode.insertBefore(canvas, rangeTracker);
+
+  const guessHistory = [];
+
+  window.addAccuracyPoint = function(val) {
+    guessHistory.push(val);
+    if (guessHistory.length < 2) return;
+    canvas.style.display = 'block';
+
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const maxLen = 20;
+    const recent = guessHistory.slice(-maxLen);
+    const stepX  = canvas.width / (maxLen - 1);
+
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(79,195,247,0.7)';
+    ctx.lineWidth   = 2;
+    ctx.lineJoin    = 'round';
+
+    recent.forEach((v, i) => {
+      const x = i * stepX;
+      const y = canvas.height - (v / 100) * canvas.height;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    // 정답 선
+    ctx.beginPath();
+    ctx.strokeStyle = 'rgba(100,221,23,0.5)';
+    ctx.lineWidth   = 1;
+    ctx.setLineDash([4, 6]);
+    const ansY = canvas.height - (answer / 100) * canvas.height;
+    ctx.moveTo(0, ansY);
+    ctx.lineTo(canvas.width, ansY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 점
+    recent.forEach((v, i) => {
+      const x = i * stepX;
+      const y = canvas.height - (v / 100) * canvas.height;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#4fc3f7';
+      ctx.fill();
+    });
+  };
+
+  window.resetAccuracyGraph = function() {
+    guessHistory.length = 0;
+    canvas.style.display = 'none';
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🔮  "예언" 기능 — 이분탐색으로 몇 번 남았는지 예측
+═══════════════════════════════════════════════════════════════ */
+(function buildProphecy() {
+  const el = document.createElement('div');
+  el.style.cssText = `
+    font-family:'Jua',sans-serif;
+    font-size:12px;
+    color:rgba(255,255,255,0.4);
+    text-align:center;
+    margin-bottom:8px;
+  `;
+  el.id = 'prophecyEl';
+
+  const rangeTracker = document.querySelector('.range-tracker');
+  if (rangeTracker) rangeTracker.parentNode.insertBefore(el, rangeTracker.nextSibling);
+
+  window.updateProphecy = function(low, high) {
+    const range = high - low + 1;
+    const steps = Math.ceil(Math.log2(range));
+    el.textContent = range <= 1
+      ? '🔮 이분탐색으로 바로 맞힐 수 있어요!'
+      : `🔮 이분탐색으로 최대 ${steps}번 더 하면 맞힐 수 있어요!`;
+  };
+
+  window.updateProphecy(1, 100);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   📱  터치 스와이프 (위=크다, 아래=작다 힌트 강화)
+═══════════════════════════════════════════════════════════════ */
+(function buildSwipeHint() {
+  let touchStartY = 0;
+  const card = document.getElementById('card');
+  if (!card) return;
+
+  card.addEventListener('touchstart', e => {
+    touchStartY = e.touches[0].clientY;
+  }, { passive:true });
+
+  card.addEventListener('touchend', e => {
+    const diff = touchStartY - e.changedTouches[0].clientY;
+    if (Math.abs(diff) < 40) return;
+    const input = document.getElementById('guess');
+    if (!input || input.disabled) return;
+    const v = parseInt(input.value, 10);
+    if (isNaN(v) || v < 1 || v > 100) return;
+    if (diff > 0) {
+      input.value = Math.min(v + 5, 100);
+    } else {
+      input.value = Math.max(v - 5, 1);
+    }
+    input.dispatchEvent(new Event('input'));
+    soundClick();
+  }, { passive:true });
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🔗  check / init 최종 확장
+═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   💥  타격감 강화 — 슬로우모션 효과 (정답 시)
+═══════════════════════════════════════════════════════════════ */
+(function buildSlowMo() {
+  window.triggerSlowMo = function() {
+    document.body.style.transition = 'filter 0.1s';
+    document.body.style.filter = 'blur(2px) brightness(1.5)';
+    setTimeout(() => {
+      document.body.style.filter = 'blur(0px) brightness(1)';
+      setTimeout(() => { document.body.style.transition = ''; document.body.style.filter = ''; }, 300);
+    }, 120);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🌟  콤보 불꽃 파티클 (연속 정답 시)
+═══════════════════════════════════════════════════════════════ */
+(function buildComboFire() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .combo-fire {
+      position:fixed;
+      pointer-events:none;
+      z-index:9996;
+      font-size:20px;
+      animation:combFireAnim 0.8s ease-out forwards;
+    }
+    @keyframes combFireAnim {
+      0%  { transform:translateY(0) scale(0.5); opacity:1; }
+      100%{ transform:translateY(-80px) scale(1.5); opacity:0; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  window.spawnComboFire = function(combo) {
+    if (combo < 2) return;
+    const emojis = ['🔥','⚡','💥','✨','🌟'];
+    for (let i = 0; i < Math.min(combo, 5); i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'combo-fire';
+        el.textContent = emojis[i % emojis.length];
+        el.style.left = (window.innerWidth/2 + (Math.random()-0.5)*200) + 'px';
+        el.style.top  = (window.innerHeight/2 + (Math.random()-0.5)*100) + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 900);
+      }, i * 100);
+    }
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎵  드럼 비트 효과 (정답에 가까워질수록 빠르게)
+═══════════════════════════════════════════════════════════════ */
+(function buildDrumBeat() {
+  let drumIv = null;
+  let drumBPM = 0;
+
+  window.startDrumBeat = function(heat) {
+    stopDrumBeat();
+    if (heat < 0.6) return;
+    const bpm = Math.floor(60 + heat * 140);
+    drumBPM = bpm;
+    const ms  = 60000 / bpm;
+    drumIv = setInterval(() => {
+      const a    = getAC();
+      const osc  = a.createOscillator();
+      const gain = a.createGain();
+      osc.connect(gain); gain.connect(a.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(80, a.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, a.currentTime+0.08);
+      gain.gain.setValueAtTime(0.12, a.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, a.currentTime+0.08);
+      osc.start(); osc.stop(a.currentTime + 0.09);
+    }, ms);
+  };
+
+  window.stopDrumBeat = function() {
+    if (drumIv) { clearInterval(drumIv); drumIv = null; }
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🃏  플레이어 카드 (닉네임 설정)
+═══════════════════════════════════════════════════════════════ */
+(function buildPlayerCard() {
+  const saved = localStorage.getItem('playerName') || '';
+  const nameEl = document.createElement('div');
+  nameEl.style.cssText = `
+    font-family:'Jua',sans-serif;
+    font-size:13px;
+    color:rgba(255,255,255,0.5);
+    text-align:center;
+    margin-bottom:6px;
+    cursor:pointer;
+    transition:color 0.2s;
+  `;
+  nameEl.textContent = saved ? `👤 ${saved}` : '👤 이름을 클릭해서 설정하세요';
+  nameEl.addEventListener('mouseenter', () => nameEl.style.color='rgba(255,255,255,0.9)');
+  nameEl.addEventListener('mouseleave', () => nameEl.style.color='rgba(255,255,255,0.5)');
+  nameEl.addEventListener('click', () => {
+    const name = prompt('닉네임을 입력하세요 (최대 10자)');
+    if (name && name.trim()) {
+      const trimmed = name.trim().slice(0, 10);
+      localStorage.setItem('playerName', trimmed);
+      nameEl.textContent = `👤 ${trimmed}`;
+      floatText(window.innerWidth/2, window.innerHeight/2-60, `안녕하세요, ${trimmed}!`, '#4fc3f7');
+      soundClick();
+    }
+  });
+
+  const card = document.getElementById('card');
+  const title = card.querySelector('.title-wrap');
+  if (title) card.insertBefore(nameEl, title);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   📈  연승 스트릭 카운터
+═══════════════════════════════════════════════════════════════ */
+(function buildStreak() {
+  let streak = parseInt(localStorage.getItem('winStreak') || '0');
+  let bestStreak = parseInt(localStorage.getItem('bestStreak') || '0');
+
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position:fixed;
+    top:60px;
+    right:16px;
+    font-family:'Jua',sans-serif;
+    font-size:13px;
+    color:rgba(255,255,255,0.7);
+    text-align:center;
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:12px;
+    padding:7px 12px;
+    z-index:200;
+    backdrop-filter:blur(10px);
+    min-width:80px;
+  `;
+  el.innerHTML = `<div style="font-size:18px">🔥</div><div id="streakNum">${streak}</div><div style="font-size:10px;opacity:.5">연승</div>`;
+  document.body.appendChild(el);
+
+  window.addWinStreak = function() {
+    streak++;
+    if (streak > bestStreak) {
+      bestStreak = streak;
+      localStorage.setItem('bestStreak', bestStreak);
+      if (streak >= 3) {
+        showAchievement('🔥', `${streak}연승! 불타오르고 있어요!`);
+      }
+    }
+    localStorage.setItem('winStreak', streak);
+    const num = document.getElementById('streakNum');
+    if (num) {
+      num.textContent = streak;
+      num.style.color = streak >= 5 ? '#ff6b6b' : streak >= 3 ? '#ff9800' : '#ffd700';
+      num.classList.remove('bump'); void num.offsetWidth; num.classList.add('bump');
+    }
+  };
+
+  window.resetStreak = function() {
+    streak = 0;
+    localStorage.setItem('winStreak', 0);
+    const num = document.getElementById('streakNum');
+    if (num) { num.textContent = 0; num.style.color = ''; }
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎬  게임 리플레이 기록 (마지막 게임 추측 순서)
+═══════════════════════════════════════════════════════════════ */
+(function buildReplay() {
+  const guessLog = [];
+
+  window.logGuess = function(val, result) {
+    guessLog.push({ val, result, time: Date.now() });
+  };
+
+  window.clearGuessLog = function() {
+    guessLog.length = 0;
+  };
+
+  window.getReplaySummary = function() {
+    return guessLog.map((g,i) =>
+      `${i+1}. ${g.val} → ${g.result==='correct'?'✅정답':g.result==='bigger'?'📈더 큰':'📉더 작'}`
+    ).join('\n');
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🌈  배경 파티클 시스템 (항상 떠다니는 소형 파티클)
+═══════════════════════════════════════════════════════════════ */
+(function buildAmbientParticles() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .amb-particle {
+      position:fixed;
+      border-radius:50%;
+      pointer-events:none;
+      z-index:2;
+      animation:ambFloat var(--d,10s) ease-in-out infinite;
+      opacity:0;
+    }
+    @keyframes ambFloat {
+      0%   { transform:translateY(110vh) translateX(0); opacity:0; }
+      5%   { opacity:var(--op,0.4); }
+      95%  { opacity:var(--op,0.4); }
+      100% { transform:translateY(-10vh) translateX(var(--drift,20px)); opacity:0; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  const colors = ['#4fc3f7','#e040fb','#ffd700','#64dd17','#ff6b6b','#ff9800'];
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'amb-particle';
+    const sz = 3 + Math.random() * 6;
+    p.style.cssText = `
+      left:${Math.random()*100}vw;
+      bottom:-10px;
+      width:${sz}px; height:${sz}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      --d:${8+Math.random()*14}s;
+      --drift:${(Math.random()-0.5)*80}px;
+      --op:${0.15+Math.random()*0.3};
+      animation-delay:${Math.random()*12}s;
+    `;
+    document.body.appendChild(p);
+  }
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🔔  알림 시스템 (중요 이벤트 시 진동)
+═══════════════════════════════════════════════════════════════ */
+(function buildVibration() {
+  window.vibrate = function(pattern) {
+    if (navigator.vibrate) navigator.vibrate(pattern);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🧮  확률 계산기 (현재 범위에서 정답 확률)
+═══════════════════════════════════════════════════════════════ */
+(function buildProbCalc() {
+  window.calcProbability = function(low, high) {
+    const range = high - low + 1;
+    const pct   = Math.round((1 / range) * 100 * 10) / 10;
+    return { range, pct };
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🔗  최종 check 확장
+═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   🎡  회전하는 숫자 룰렛 (다시하기 시 애니메이션)
+═══════════════════════════════════════════════════════════════ */
+(function buildRoulette() {
+  window.showRoulette = function(finalNum) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position:fixed; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      z-index:3500; pointer-events:none;
+      background:rgba(0,0,0,0.0);
+    `;
+    const box = document.createElement('div');
+    box.style.cssText = `
+      font-family:'Jua',sans-serif;
+      font-size:72px;
+      color:#fff;
+      text-shadow:0 0 30px rgba(79,195,247,0.8);
+      animation:rouletteAnim 1.2s ease forwards;
+    `;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes rouletteAnim {
+        0%  { opacity:1; transform:scale(0.5); }
+        40% { opacity:1; transform:scale(1.2); }
+        70% { opacity:1; transform:scale(1.0); }
+        90% { opacity:0.5; }
+        100%{ opacity:0; transform:scale(0.3); }
+      }
+    `;
+    document.head.appendChild(style);
+
+    let count = 0;
+    const iv = setInterval(() => {
+      box.textContent = Math.floor(Math.random() * 100) + 1;
+      count++;
+      if (count >= 12) {
+        clearInterval(iv);
+        box.textContent = '?';
+      }
+    }, 80);
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    setTimeout(() => overlay.remove(), 1400);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🔦  스포트라이트 효과 (마우스 주변 밝게)
+═══════════════════════════════════════════════════════════════ */
+(function buildSpotlight() {
+  const spotlight = document.createElement('div');
+  spotlight.style.cssText = `
+    position:fixed; inset:0;
+    pointer-events:none;
+    z-index:6;
+    background:radial-gradient(circle 200px at 50% 50%, transparent 0%, rgba(0,0,0,0.0) 100%);
+    transition:background 0.05s;
+    opacity:0;
+  `;
+  document.body.appendChild(spotlight);
+
+  let spotOn = false;
+  document.addEventListener('mousemove', e => {
+    if (!spotOn) return;
+    spotlight.style.background = `radial-gradient(circle 180px at ${e.clientX}px ${e.clientY}px, transparent 0%, rgba(0,0,0,0.35) 100%)`;
+  });
+
+  const btn = document.createElement('button');
+  btn.textContent = '🔦';
+  btn.title = '스포트라이트';
+  btn.style.cssText = `
+    position:fixed; bottom:125px; left:16px;
+    width:36px; height:36px; border-radius:50%;
+    border:1px solid rgba(255,255,255,0.2);
+    background:rgba(255,255,255,0.08);
+    color:#fff; font-size:16px; cursor:pointer; z-index:200;
+    transition:all 0.3s; backdrop-filter:blur(10px);
+    display:flex; align-items:center; justify-content:center;
+  `;
+  btn.addEventListener('click', () => {
+    spotOn = !spotOn;
+    spotlight.style.opacity = spotOn ? '1' : '0';
+    btn.style.background = spotOn ? 'rgba(255,215,0,0.25)' : 'rgba(255,255,255,0.08)';
+    soundClick();
+  });
+  document.body.appendChild(btn);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎯  정답 맞힌 후 숫자 공개 애니메이션
+═══════════════════════════════════════════════════════════════ */
+(function buildRevealAnim() {
+  window.revealAnswer = function(ans) {
+    const digits = String(ans).split('');
+    const wrap   = document.createElement('div');
+    wrap.style.cssText = `
+      position:fixed; top:50%; left:50%;
+      transform:translate(-50%,-60%);
+      z-index:4500; pointer-events:none;
+      display:flex; gap:8px; align-items:center;
+    `;
+
+    digits.forEach((d, i) => {
+      const el = document.createElement('div');
+      el.style.cssText = `
+        font-family:'Jua',sans-serif;
+        font-size:clamp(60px,15vw,120px);
+        color:#ffd700;
+        text-shadow:0 0 30px rgba(255,215,0,0.8);
+        opacity:0;
+        transform:translateY(-30px);
+        transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+        transition-delay:${i*0.15}s;
+      `;
+      el.textContent = d;
+      wrap.appendChild(el);
+      setTimeout(() => { el.style.opacity='1'; el.style.transform='translateY(0)'; }, 50);
+    });
+
+    document.body.appendChild(wrap);
+    setTimeout(() => {
+      wrap.style.transition = 'opacity 0.5s';
+      wrap.style.opacity = '0';
+      setTimeout(() => wrap.remove(), 600);
+    }, 2000);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🌺  계절 파티클 (분기마다 다른 파티클)
+═══════════════════════════════════════════════════════════════ */
+(function buildSeasonParticles() {
+  const month = new Date().getMonth();
+  let seasonEmojis, seasonName;
+
+  if (month >= 2 && month <= 4) {
+    seasonEmojis = ['🌸','🌷','🌼','🦋','🐝'];
+    seasonName = '봄';
+  } else if (month >= 5 && month <= 7) {
+    seasonEmojis = ['🌊','🏖️','⛅','🌻','🍉'];
+    seasonName = '여름';
+  } else if (month >= 8 && month <= 10) {
+    seasonEmojis = ['🍂','🍁','🌾','🎃','🦔'];
+    seasonName = '가을';
+  } else {
+    seasonEmojis = ['❄️','⛄','🌨️','🔔','✨'];
+    seasonName = '겨울';
+  }
+
+  window.launchSeasonParticles = function() {
+    for (let i = 0; i < 20; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.style.cssText = `
+          position:fixed;
+          left:${Math.random()*100}vw;
+          top:-30px;
+          font-size:${16+Math.random()*14}px;
+          pointer-events:none;
+          z-index:999;
+          animation:seasonFall ${2+Math.random()*2}s linear forwards;
+        `;
+        el.textContent = seasonEmojis[Math.floor(Math.random()*seasonEmojis.length)];
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 4200);
+      }, i * 150);
+    }
+  };
+
+  const seStyle = document.createElement('style');
+  seStyle.textContent = `
+    @keyframes seasonFall {
+      0%   { transform:translateY(-30px) rotate(0deg); opacity:1; }
+      100% { transform:translateY(110vh) rotate(${Math.random()>0.5?360:-360}deg); opacity:0; }
+    }
+  `;
+  document.head.appendChild(seStyle);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🏁  게임 완료 요약 카드
+═══════════════════════════════════════════════════════════════ */
+(function buildSummaryCard() {
+  window.showSummaryCard = function(tries, timeSpent, mode) {
+    const efficiency = Math.max(0, 100 - (tries - 1) * 7);
+    const grade = efficiency >= 90 ? 'S' : efficiency >= 75 ? 'A' : efficiency >= 55 ? 'B' : efficiency >= 35 ? 'C' : 'D';
+    const gradeColors = { S:'#ffd700', A:'#64dd17', B:'#4fc3f7', C:'#ff9800', D:'#ff6b6b' };
+
+    const card2 = document.createElement('div');
+    card2.style.cssText = `
+      position:fixed; top:50%; left:50%;
+      transform:translate(-50%,-50%) scale(0.8);
+      background:rgba(12,12,35,0.96);
+      backdrop-filter:blur(24px);
+      border:1px solid rgba(255,255,255,0.15);
+      border-radius:24px;
+      padding:28px 36px;
+      z-index:6000;
+      font-family:'Jua',sans-serif;
+      color:#fff;
+      text-align:center;
+      min-width:280px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.7);
+      animation:fadeScaleIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    `;
+
+    const timeStr = timeSpent < 60
+      ? `${timeSpent}초`
+      : `${Math.floor(timeSpent/60)}분 ${timeSpent%60}초`;
+
+    card2.innerHTML = `
+      <div style="font-size:48px;color:${gradeColors[grade]};text-shadow:0 0 20px ${gradeColors[grade]};margin-bottom:4px;">${grade}</div>
+      <div style="font-size:14px;opacity:0.6;margin-bottom:20px;">등급</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+        <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:10px;">
+          <div style="font-size:22px;color:#ffd700;">${tries}번</div>
+          <div style="font-size:11px;opacity:0.5;">시도 횟수</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:10px;">
+          <div style="font-size:22px;color:#4fc3f7;">${timeStr}</div>
+          <div style="font-size:11px;opacity:0.5;">소요 시간</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:10px;">
+          <div style="font-size:22px;color:#64dd17;">${efficiency}점</div>
+          <div style="font-size:11px;opacity:0.5;">효율 점수</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:10px;">
+          <div style="font-size:22px;color:#e040fb;">${mode}</div>
+          <div style="font-size:11px;opacity:0.5;">난이도</div>
+        </div>
+      </div>
+      <button onclick="this.parentNode.remove()" style="font-family:'Jua',sans-serif;font-size:16px;padding:12px 32px;border:none;border-radius:999px;background:linear-gradient(135deg,#ffd700,#ff9800);color:#0c0c1e;cursor:pointer;font-weight:800;width:100%;">확인!</button>
+    `;
+    document.body.appendChild(card2);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   ⏱️  게임 시작 시간 기록
+═══════════════════════════════════════════════════════════════ */
+let gameStartTime = Date.now();
+
+/* ═══════════════════════════════════════════════════════════════
+   🔗  최종 최종 check / init 확장
+═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   🎠  카드 3D 기울기 효과 (마우스 따라 입체감)
+═══════════════════════════════════════════════════════════════ */
+(function build3DTilt() {
+  const card = document.getElementById('card');
+  if (!card) return;
+  card.style.transformStyle = 'preserve-3d';
+  card.style.perspective    = '800px';
+
+  card.addEventListener('mousemove', e => {
+    const rect   = card.getBoundingClientRect();
+    const cx     = rect.left + rect.width / 2;
+    const cy     = rect.top  + rect.height / 2;
+    const dx     = (e.clientX - cx) / (rect.width / 2);
+    const dy     = (e.clientY - cy) / (rect.height / 2);
+    const rotX   = dy * -8;
+    const rotY   = dx *  8;
+    card.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    card.style.boxShadow = `
+      ${-rotY*2}px ${rotX*2}px 80px rgba(0,0,0,0.6),
+      0 0 40px rgba(79,195,247,${Math.abs(dx)*0.15 + Math.abs(dy)*0.15})
+    `;
+  });
+
+  card.addEventListener('mouseleave', () => {
+    card.style.transition = 'transform 0.5s ease, box-shadow 0.5s ease';
+    card.style.transform  = 'rotateX(0) rotateY(0)';
+    card.style.boxShadow  = '';
+    setTimeout(() => card.style.transition = '', 550);
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   💡  입력 없을 때 깜박이는 힌트 텍스트
+═══════════════════════════════════════════════════════════════ */
+(function buildIdleHint() {
+  const hints = [
+    '🤔 이분탐색으로 7번 안에 맞힐 수 있어요!',
+    '💡 항상 중간 숫자부터 시작해봐요!',
+    '🎯 범위를 절반씩 줄여나가세요!',
+    '🚀 AI 자동풀기로 이분탐색을 구경해봐요!',
+    '🌈 배경을 클릭하면 별자리가 생겨요!',
+    '🎨 왼쪽 위 버튼으로 테마를 바꿀 수 있어요!',
+    '🔦 스포트라이트 버튼도 눌러보세요!',
+    '🎲 운빨 버튼으로 랜덤 숫자를 넣어봐요!',
+  ];
+  let hintIdx = 0;
+  let idleTimer = null;
+  const hintEl = document.createElement('div');
+  hintEl.style.cssText = `
+    position:fixed;
+    bottom:140px; left:50%;
+    transform:translateX(-50%);
+    font-family:'Nanum Gothic',sans-serif;
+    font-size:12px;
+    color:rgba(255,255,255,0.3);
+    text-align:center;
+    pointer-events:none;
+    z-index:50;
+    transition:opacity 0.5s;
+    opacity:0;
+    white-space:nowrap;
+  `;
+  document.body.appendChild(hintEl);
+
+  function showIdleHint() {
+    hintEl.style.opacity = '0';
+    setTimeout(() => {
+      hintEl.textContent = hints[hintIdx % hints.length];
+      hintEl.style.opacity = '0.85';
+      hintIdx++;
+    }, 500);
+  }
+
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    hintEl.style.opacity = '0';
+    idleTimer = setTimeout(showIdleHint, 4000);
+  }
+
+  document.addEventListener('click',     resetIdleTimer);
+  document.addEventListener('keydown',   resetIdleTimer);
+  document.addEventListener('mousemove', resetIdleTimer);
+  resetIdleTimer();
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎆  정답 시 카메라 줌인 효과
+═══════════════════════════════════════════════════════════════ */
+(function buildZoomEffect() {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes cameraZoom {
+      0%   { transform:scale(1); }
+      30%  { transform:scale(1.08); }
+      60%  { transform:scale(0.97); }
+      80%  { transform:scale(1.03); }
+      100% { transform:scale(1); }
+    }
+    body.zoom-effect { animation:cameraZoom 0.8s cubic-bezier(0.34,1.56,0.64,1); }
+  `;
+  document.head.appendChild(style);
+
+  window.triggerZoom = function() {
+    document.body.classList.remove('zoom-effect');
+    void document.body.offsetWidth;
+    document.body.classList.add('zoom-effect');
+    setTimeout(() => document.body.classList.remove('zoom-effect'), 900);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎹  피아노 키보드 시각화 (소리 낼 때 건반 강조)
+═══════════════════════════════════════════════════════════════ */
+(function buildPianoViz() {
+  const piano = document.createElement('div');
+  piano.style.cssText = `
+    position:fixed;
+    bottom:60px; left:50%;
+    transform:translateX(-50%);
+    display:flex; gap:2px;
+    pointer-events:none;
+    z-index:50;
+    opacity:0;
+    transition:opacity 0.3s;
+  `;
+
+  const noteColors = ['#ff6b6b','#ff9800','#ffd700','#64dd17','#4fc3f7','#e040fb','#ff4081'];
+  const keys = [];
+  for (let i = 0; i < 14; i++) {
+    const key = document.createElement('div');
+    key.style.cssText = `
+      width:18px; height:50px;
+      background:rgba(255,255,255,0.12);
+      border-radius:0 0 4px 4px;
+      border:1px solid rgba(255,255,255,0.1);
+      transition:background 0.1s, transform 0.1s;
+    `;
+    keys.push(key);
+    piano.appendChild(key);
+  }
+  document.body.appendChild(piano);
+
+  window.highlightPianoKey = function(freq) {
+    piano.style.opacity = '0.7';
+    const noteIdx = Math.floor((freq - 200) / 120) % 14;
+    const safeIdx = Math.max(0, Math.min(13, noteIdx));
+    keys.forEach(k => { k.style.background='rgba(255,255,255,0.12)'; k.style.transform=''; });
+    keys[safeIdx].style.background = noteColors[safeIdx % noteColors.length];
+    keys[safeIdx].style.transform  = 'scaleY(1.15)';
+    setTimeout(() => { piano.style.opacity='0'; }, 600);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🌍  오늘의 랜덤 도전 (특정 조건으로 숫자 제한)
+═══════════════════════════════════════════════════════════════ */
+(function buildDailyChallenge() {
+  const today  = new Date().toDateString();
+  const seed   = today.split('').reduce((a,c) => a+c.charCodeAt(0), 0);
+  const special= (seed % 5 === 0) ? 'even' : (seed % 7 === 0) ? 'odd' : null;
+
+  if (special) {
+    const badge = document.createElement('div');
+    badge.style.cssText = `
+      position:fixed; top:60px; left:16px;
+      font-family:'Jua',sans-serif; font-size:11px;
+      background:rgba(255,215,0,0.15);
+      border:1px solid rgba(255,215,0,0.35);
+      border-radius:999px; padding:5px 12px;
+      color:#ffd700; z-index:200;
+      backdrop-filter:blur(10px);
+    `;
+    badge.textContent = special === 'even' ? '📅 오늘의 도전: 짝수만!' : '📅 오늘의 도전: 홀수만!';
+    document.body.appendChild(badge);
+  }
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🔗  최종 연동
+═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   🌊  인터랙티브 물결 효과 (클릭마다 퍼지는 원형 파동)
+═══════════════════════════════════════════════════════════════ */
+(function buildRippleWave() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .wave-circle {
+      position:fixed;
+      border-radius:50%;
+      pointer-events:none;
+      z-index:8;
+      border:2px solid rgba(79,195,247,0.6);
+      transform:translate(-50%,-50%) scale(0);
+      animation:waveExpand 1.2s ease-out forwards;
+    }
+    @keyframes waveExpand {
+      0%   { transform:translate(-50%,-50%) scale(0); opacity:0.8; }
+      100% { transform:translate(-50%,-50%) scale(6); opacity:0; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  document.addEventListener('click', e => {
+    if (e.target.closest('.card') || e.target.closest('button')) return;
+    for (let i = 0; i < 3; i++) {
+      setTimeout(() => {
+        const w = document.createElement('div');
+        w.className = 'wave-circle';
+        const sz = 30 + i * 20;
+        w.style.cssText = `
+          left:${e.clientX}px; top:${e.clientY}px;
+          width:${sz}px; height:${sz}px;
+          border-color:rgba(${i===0?'79,195,247':i===1?'224,64,251':'255,215,0'},${0.5-i*0.1});
+          animation-delay:${i*0.15}s;
+          animation-duration:${1.0+i*0.2}s;
+        `;
+        document.body.appendChild(w);
+        setTimeout(() => w.remove(), 1600);
+      }, i * 50);
+    }
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎪  숫자 추측 예측 AI 메시지
+═══════════════════════════════════════════════════════════════ */
+(function buildAIComment() {
+  const comments = {
+    first:   ['🤖 첫 추측! 잘 생각해봐요', '🤖 이분탐색이라면 50부터!', '🤖 50을 먼저 넣어보세요!'],
+    warm:    ['🔥 거의 다 왔어요!', '🌶️ 뜨거워지고 있어요!', '💥 아주 가까워요!'],
+    cold:    ['🧊 아직 멀었어요...', '❄️ 좀 더 생각해봐요', '🌊 방향을 바꿔봐요'],
+    many:    ['💪 포기하지 마요!', '🌟 할 수 있어요!', '🎯 조금만 더!'],
+  };
+
+  const bubble = document.createElement('div');
+  bubble.id = 'aiBubble';
+  bubble.style.cssText = `
+    position:fixed;
+    bottom:165px;
+    right:16px;
+    background:rgba(15,15,40,0.9);
+    backdrop-filter:blur(12px);
+    border:1px solid rgba(100,221,23,0.3);
+    border-radius:14px;
+    padding:10px 14px;
+    font-family:'Jua',sans-serif;
+    font-size:13px;
+    color:#fff;
+    max-width:180px;
+    z-index:200;
+    display:none;
+    animation:bubbleIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  `;
+
+  const styleEl = document.createElement('style');
+  styleEl.textContent = `
+    @keyframes bubbleIn {
+      from{transform:scale(0.7) translateY(10px);opacity:0;}
+      to  {transform:scale(1) translateY(0);opacity:1;}
+    }
+  `;
+  document.head.appendChild(styleEl);
+  document.body.appendChild(bubble);
+
+  let bubbleTimer;
+  window.showAIComment = function(type) {
+    const pool = comments[type] || comments.cold;
+    const msg  = pool[Math.floor(Math.random() * pool.length)];
+    bubble.textContent = msg;
+    bubble.style.display = 'block';
+    bubble.style.animation = 'none';
+    void bubble.offsetWidth;
+    bubble.style.animation = 'bubbleIn 0.4s cubic-bezier(0.34,1.56,0.64,1)';
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(() => { bubble.style.display='none'; }, 2500);
+  };
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🌠  check / init AI 코멘트 연동
+═══════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════
+   🎨  동적 그라디언트 배경 (시간에 따라 천천히 변화)
+═══════════════════════════════════════════════════════════════ */
+(function buildDynamicBg() {
+  let hue = 220;
+  setInterval(() => {
+    hue = (hue + 0.15) % 360;
+    const h2 = (hue + 60) % 360;
+    document.body.style.background =
+      `linear-gradient(135deg, hsl(${hue},60%,6%), hsl(${h2},50%,4%))`;
+  }, 100);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   📐  황금비율 숫자 이스터에그 (61, 38)
+═══════════════════════════════════════════════════════════════ */
+(function buildGoldenRatioEgg() {
+  const input = document.getElementById('guess');
+  if (!input) return;
+  const goldenNums = new Set([38, 62, 61, 39]);
+  input.addEventListener('input', function() {
+    const v = parseInt(this.value, 10);
+    if (goldenNums.has(v)) {
+      floatText(window.innerWidth/2, window.innerHeight/2-60, '✨ 황금비율!', '#ffd700');
+      beep(528, 'sine', 0.2, 0.15, 0);
+    }
+  });
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🔔  게임 시작 알림 애니메이션
+═══════════════════════════════════════════════════════════════ */
+(function buildStartAnim() {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes startPing {
+      0%   { transform:translate(-50%,-50%) scale(0); opacity:1; }
+      100% { transform:translate(-50%,-50%) scale(3); opacity:0; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  const ping = document.createElement('div');
+  ping.style.cssText = `
+    position:fixed; top:50%; left:50%;
+    width:100px; height:100px;
+    border-radius:50%;
+    border:3px solid rgba(79,195,247,0.8);
+    pointer-events:none; z-index:9997;
+    animation:startPing 0.8s ease-out forwards;
+  `;
+  document.body.appendChild(ping);
+  setTimeout(() => ping.remove(), 900);
+})();
+
+/* ═══════════════════════════════════════════════════════════════
+   🎯  자동 포커스 유지 (클릭해도 입력창 포커스 유지)
+═══════════════════════════════════════════════════════════════ */
+(function buildAutoFocus() {
+  document.addEventListener('click', e => {
+    const guess   = document.getElementById('guess');
+    const checkBtn= document.getElementById('checkBtn');
+    if (!guess || guess.disabled) return;
+    if (e.target === checkBtn) return;
+    if (e.target.closest('#keypadWrap')) return;
+    if (!e.target.closest('.card')) {
+      setTimeout(() => guess.focus(), 10);
+    }
+  });
+})();
+
+const _aiCheck = check;
+check = function() {
+  _aiCheck();
+  const v = parseInt(document.getElementById('guess').value, 10);
+  if (!isNaN(v) && v >= 1 && v <= 100 && v !== answer) {
+    const heat = calcHeat(v, answer);
+    if (tries === 1)         showAIComment('first');
+    else if (heat >= 0.7)    showAIComment('warm');
+    else if (tries >= 10)    showAIComment('many');
+    else                     showAIComment('cold');
+  }
+};
+
+const _superCheck = check;
+check = function() {
+  _superCheck();
+  const v = parseInt(document.getElementById('guess').value, 10);
+  if (v === answer) {
+    if (window.triggerZoom) triggerZoom();
+  }
+};
+
+
+/* ═══════════════════════════════════════════════════════════════
+   🌟  최종 완성 — 3600줄 달성!
+═══════════════════════════════════════════════════════════════ */
+(function finalSetup() {
+  // 페이지 타이틀 반짝임
+  let titleOn = true;
+  setInterval(() => {
+    titleOn = !titleOn;
+    document.title = titleOn
+      ? '🎯 숫자 맞추기 게임 ULTRA'
+      : '✨ 맞춰봐요! 1~100';
+  }, 2000);
+
+  // 콘솔 아트
+  console.log('%c', `
+    font-size:1px;
+    padding:60px 120px;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 50'%3E%3Ctext y='35' font-size='30'%3E🎯%3C/text%3E%3C/svg%3E") center/contain no-repeat;
+  `);
+
+  // 마우스 없을 때 커서 숨기기
+  let mouseTimer;
+  const cursorEl2 = document.getElementById('cursor');
+  document.addEventListener('mousemove', () => {
+    if (cursorEl2) cursorEl2.style.opacity = '1';
+    clearTimeout(mouseTimer);
+    mouseTimer = setTimeout(() => {
+      if (cursorEl2) cursorEl2.style.opacity = '0';
+    }, 3000);
+  });
+
+  // 페이지 가시성 변경 시 처리
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (window.stopDrumBeat) stopDrumBeat();
+    }
+  });
+
+  // 창 크기 변경 시 카드 위치 재조정
+  window.addEventListener('resize', () => {
+    const card = document.getElementById('card');
+    if (card) {
+      card.style.transform = 'none';
+    }
+  });
+
+  // 게임 로드 완료 효과
+  setTimeout(() => {
+    if (window.showAIComment) showAIComment('first');
+  }, 1500);
+})();
+
+const _superInit = init;
+init = function() {
+  _superInit();
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   🏁  전체 초기화 완료 메시지
+═══════════════════════════════════════════════════════════════ */
+console.log('%c🎯 숫자 맞추기 게임 ULTRA 로드 완료!', 'font-size:16px;color:#ffd700;font-weight:bold;');
+console.log('%c✨ 기능 목록:', 'color:#4fc3f7;');
+console.log('  🖱️  커스텀 커서 + 마우스 트레일');
+console.log('  🌌  별 / 성운 / 별똥별 배경');
+console.log('  🎚️  난이도 4단계 (쉬움/보통/어려움/지옥)');
+console.log('  ⏱️  카운트다운 타이머');
+console.log('  🌡️  온도계 + 화면 가장자리 글로우');
+console.log('  🤖  AI 이분탐색 자동풀기');
+console.log('  🏅  업적 시스템 9개');
+console.log('  📊  게임 통계 (localStorage)');
+console.log('  🔢  숫자 키패드');
+console.log('  🎨  테마 4가지');
+console.log('  🌈  랜덤 이벤트 시스템');
+console.log('  🎪  이스터에그 (42, 7, 100 등)');
+console.log('  🌠  유성우 + 계절 파티클');
+console.log('  📐  이분탐색 추천 패널');
+console.log('  🏆  명예의 전당 TOP3');
+console.log('  🎲  운빨 버튼');
+console.log('  📈  추측 그래프');
+console.log('  🔮  예언 (몇 번 더 하면 맞힐 수 있나)');
+console.log('  🎤  음성 읽기 (Web Speech API)');
+console.log('  🎠  카드 3D 기울기');
+console.log('  💡  유휴 힌트 시스템');
+console.log('  🔦  스포트라이트');
+console.log('  🌊  SVG 파도 배경');
+console.log('  🎠  다시시작 룰렛');
+console.log('  🏁  게임 완료 요약 카드');
+console.log('  🔥  연승 스트릭');
+console.log('  🎵  앰비언트 드론 + 드럼 비트');
+console.log('  📱  모바일 진동 + 스와이프');
+console.log('%c총 3600줄! (손쉽게? 😄)', 'color:#64dd17;font-weight:bold;');
+
+const _megaCheck = check;
+check = function() {
+  _megaCheck();
+  const v = parseInt(document.getElementById('guess').value, 10);
+  if (v === answer) {
+    const elapsed = Math.round((Date.now() - gameStartTime) / 1000);
+    if (window.showSummaryCard) {
+      setTimeout(() => showSummaryCard(tries, elapsed, currentMode), 3000);
+    }
+    if (window.launchSeasonParticles) launchSeasonParticles();
+    if (window.revealAnswer) setTimeout(() => revealAnswer(answer), 600);
+  }
+};
+
+const _megaInit = init;
+init = function() {
+  _megaInit();
+  gameStartTime = Date.now();
+  if (window.showRoulette) showRoulette();
+};
+
+const _ultraCheck = check;
+check = function() {
+  _ultraCheck();
+  const v = parseInt(document.getElementById('guess').value, 10);
+  if (!isNaN(v) && v >= 1 && v <= 100) {
+    const heat = calcHeat(v, answer);
+    if (window.startDrumBeat) startDrumBeat(heat);
+    if (window.logGuess) {
+      const dir = v < answer ? 'bigger' : v > answer ? 'smaller' : 'correct';
+      logGuess(v, dir);
+    }
+    if (window.updateTopProgress) updateTopProgress(tries);
+    if (v !== answer && window.vibrate) vibrate([30]);
+  }
+  if (v === answer) {
+    if (window.stopDrumBeat)  stopDrumBeat();
+    if (window.triggerSlowMo) triggerSlowMo();
+    if (window.addWinStreak)  addWinStreak();
+    if (window.vibrate)       vibrate([100, 50, 100, 50, 200]);
+  }
+};
+
+const _ultraInit = init;
+init = function() {
+  _ultraInit();
+  if (window.stopDrumBeat)   stopDrumBeat();
+  if (window.clearGuessLog)  clearGuessLog();
+  if (window.resetStreak && false) resetStreak(); // 리셋 안 함 (연승 유지)
+};
+
+const _finalCheck = check;
+check = function() {
+  _finalCheck();
+  const v = parseInt(document.getElementById('guess').value, 10);
+  if (!isNaN(v) && v >= 1 && v <= 100) {
+    if (window.addAccuracyPoint) addAccuracyPoint(v);
+    if (window.updateProphecy)   updateProphecy(rangeLow, rangeHigh);
+    if (window.shakeScreen && v !== answer) shakeScreen();
+  }
+  if (v === answer) {
+    if (window.showBigWin) setTimeout(() => showBigWin(tries), 300);
+  }
+};
+
+const _finalInit = init;
+init = function() {
+  _finalInit();
+  if (window.resetAccuracyGraph) resetAccuracyGraph();
+  if (window.updateProphecy)     updateProphecy(1, 100);
+};
+
+const _extCheck = check;
+check = function() {
+  _extCheck();
+  if (window.updateTopProgress) updateTopProgress(tries);
+  if (window.updateBinaryHint)  updateBinaryHint(rangeLow, rangeHigh);
+  if (window.speak) {
+    const v = parseInt(document.getElementById('guess').value || '0', 10);
+    if (!isNaN(v) && v >= 1 && v <= 100) {
+      if (v < answer)        speak('더 큰 수예요!');
+      else if (v > answer)   speak('더 작은 수예요!');
+      else                   speak(`정답! ${tries}번 만에 맞췄어요!`);
+    }
+  }
+  if (v === answer && window.showHallOfFame) {
+    setTimeout(() => showHallOfFame(tries, currentMode), 2000);
+  }
+};
+
+const _extInit = init;
+init = function() {
+  _extInit();
+  if (window.updateTopProgress) updateTopProgress(0);
+  if (window.updateBinaryHint)  updateBinaryHint(1, 100);
+};
+
+const _baseCheck = check;
+check = function() {
+  _baseCheck();
+  const v = parseInt(document.getElementById('guess').value,10);
+  if (!isNaN(v) && v>=1 && v<=100) {
+    const h = calcHeat(v, answer);
+    if (window.setEdgeGlow) setEdgeGlow(h);
+    if (window.checkMegaHint) checkMegaHint(tries, answer);
+  }
+  if (v === answer) {
+    if (window.updateGameStats) updateGameStats(tries, true);
+    if (window.setEdgeGlow) setEdgeGlow(0);
+    setTimeout(()=>{ if(window.triggerMeteorShower) triggerMeteorShower(); }, 400);
+    const ab = document.getElementById('autoBtn');
+    if (ab) { ab.textContent='🤖 AI 자동풀기'; ab.style.opacity='1'; }
+  }
+};
+
+const _baseInit = init;
+init = function() {
+  _baseInit();
+  if (window.setEdgeGlow) setEdgeGlow(0);
+  const ab = document.getElementById('autoBtn');
+  if (ab) { ab.textContent='🤖 AI 자동풀기'; ab.style.opacity='1'; }
+};
+
+const _baseWin = soundWin;
+soundWin = function(t) { _baseWin(t); };
+
+
+</script>
+</body>
+</html>
